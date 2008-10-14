@@ -1,0 +1,11 @@
+## Interface: 20400
+## Title: lib-st |cff7f7fff -Ace3-|r
+## Notes: Does stuff for sachmo
+## Author: Sachmo - Arthas (TG)
+## Version: 0.1
+## OptionalDeps: Ace3
+## X-Embeds: Ace3
+## X-Category: Interface Enhancements
+embeds.xml
+
+Core.lua
