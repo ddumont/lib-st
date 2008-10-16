@@ -181,9 +181,9 @@ do
 		self:Refresh();
 	end
 		
-	function ScrollingTable:CreateST(cols, numRows, rowHeight)
+	function ScrollingTable:CreateST(cols, numRows, rowHeight, parent)
 		local st = {};
-		local f = CreateFrame("Frame", "ScrollTable"..framecount, UIParent);
+		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
 		framecount = framecount + 1;
 		st.showing = true;
 		st.frame = f;
@@ -200,9 +200,9 @@ do
 		st.displayRows = numRows or 12;
 		st.rowHeight = rowHeight or 15;
 		st.cols = cols or {
-			{ ["name"] = "Test 1", ["width"] = 100 }, -- [1]
-			{ ["name"] = "Test 2", ["width"] = 200, ["align"] = "CENTER" }, -- [2]
-			{ ["name"] = "Test 3", ["width"] = 200, ["align"] = "RIGHT" }, -- [2]
+			{ ["name"] = "Test 1", ["width"] = 50 }, -- [1]
+			{ ["name"] = "Test 2", ["width"] = 50, ["align"] = "CENTER" }, -- [2]
+			{ ["name"] = "Test 3", ["width"] = 50, ["align"] = "RIGHT" }, -- [2]
 		};
 		st.data = {};
 	
