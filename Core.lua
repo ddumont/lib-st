@@ -87,8 +87,8 @@ do
 					end
 					col:SetFontString(fs);
 									
-					col:SetText(row:GetName().."Col"..j);
-					col:SetTextColor(1.0, 0.0, 0.0, 1.0);
+					fs:SetText(row:GetName().."Col"..j);
+					fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
 					col:SetPushedTextOffset(0,0);
 				end	
 				local rel = row;
@@ -159,6 +159,7 @@ do
 			{ ["name"] = "Test 2", ["width"] = 200 }, -- [2]
 			{ ["name"] = "Test 3", ["width"] = 200 }, -- [2]
 		};
+		st.data = {};
 	
 		f:SetBackdrop(ScrollPaneBackdrop);
 		f:SetBackdropColor(0.1,0.1,0.1);
@@ -182,9 +183,9 @@ do
 			FauxScrollFrame_OnVerticalScroll(self, offset, st.rowHeight, st.Refresh);
 		end);
 		
-		st.data = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22};
 		st:SetDisplayCols(st.cols);
 		st:SetDisplayRows(st.displayRows, st.rowHeight);
+		st:SetData({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22});
 		return st;
 	end
 end
