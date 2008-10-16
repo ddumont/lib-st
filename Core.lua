@@ -15,6 +15,28 @@ end
 function ScrollingTable:ChatCommand()
 	if not self.st then 
 		self.st = self:CreateST();
+		local data = {}
+		for row = 1, 20 do
+			if not data[row] then 
+				data[row] = {};
+			end
+			for col = 1, 3 do
+				if not data[row].cols then 
+					data[row].cols = {};
+				end
+				data[row].cols[col] = { ["value"] = row + (col / 10) };
+				
+				-- data[row].cols[col].color    (cell text color)
+				-- data[row].cols[col].bgcolor    (cell text color)
+				-- etc
+			end
+			
+			-- data[row].color
+			-- data[row].bgcolor
+			-- data[row].highcolor
+			-- etc
+		end 
+		self.st:SetData(data);
 	elseif self.st.showing then 
 		self.st:Hide();
 	else
@@ -80,15 +102,9 @@ do
 					row.cols[j] = col;
 				
 					local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
-					if j > 1 then
-						fs:SetPoint("RIGHT", col, "RIGHT", 0, 0); 
-					else
-						fs:SetPoint("LEFT", col, "LEFT", 0, 0);
-					end
+					local align = self.cols[j].align or "LEFT";
+					fs:SetPoint(align, col, align, 0, 0); 
 					col:SetFontString(fs);
-									
-					fs:SetText(row:GetName().."Col"..j);
-					fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
 					col:SetPushedTextOffset(0,0);
 				end	
 				local rel = row;
@@ -119,6 +135,35 @@ do
 	
 	local SetDisplayCols = function(self, cols)
 		self.cols = cols;
+		
+		local row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
+		row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 0, 0);
+		row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", 0, 0);
+		row:SetHeight(self.rowHeight);
+		row.cols = {};
+		for i = 1, #cols do 
+			col = CreateFrame("Button", row:GetName().."Col"..i, row);
+			row.cols[i] = col;
+			local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
+			local align = cols[i].align or "LEFT";
+			fs:SetPoint(align, col, align, 6, 0); 
+			col:SetFontString(fs);
+									
+			fs:SetText(cols[i].name);
+			fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
+			col:SetPushedTextOffset(0,0);
+				
+			local rel = row;
+			if i > 1 then 
+				rel = row.cols[i-1];
+				col:SetPoint("LEFT", rel, "RIGHT", 0, 0);
+			else
+				col:SetPoint("LEFT", rel, "LEFT", 0, 0);
+			end
+			col:SetHeight(self.rowHeight);
+			col:SetWidth(cols[i].width);
+		end
+		
 		self:SetWidth();
 	end
 	
@@ -156,8 +201,8 @@ do
 		st.rowHeight = rowHeight or 15;
 		st.cols = cols or {
 			{ ["name"] = "Test 1", ["width"] = 100 }, -- [1]
-			{ ["name"] = "Test 2", ["width"] = 200 }, -- [2]
-			{ ["name"] = "Test 3", ["width"] = 200 }, -- [2]
+			{ ["name"] = "Test 2", ["width"] = 200, ["align"] = "CENTER" }, -- [2]
+			{ ["name"] = "Test 3", ["width"] = 200, ["align"] = "RIGHT" }, -- [2]
 		};
 		st.data = {};
 	
@@ -170,12 +215,26 @@ do
 		scrollframe:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0);
 		scrollframe:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, 0);
 		
-		st.Refresh = function ()
+		st.Refresh = function()
 			FauxScrollFrame_Update(scrollframe, #st.data, st.displayRows, st.rowHeight);
-			local o = 0, FauxScrollFrame_GetOffset(scrollframe);
+			local o = FauxScrollFrame_GetOffset(scrollframe);
 			
 			for i = 1, st.displayRows do
-				 
+				local row = i + o;
+				
+				if st.rows then
+					for col = 1, #st.cols do
+						local celldisplay = st.rows[i].cols[col];
+						if st.data[row] then
+							local celldata = st.data[row].cols[col];
+							celldisplay:SetText(celldata.value);
+							local fs = celldisplay:GetFontString();
+							fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
+						else
+							celldisplay:SetText("");
+						end
+					end
+				end
 			end
 		end
 		
@@ -185,7 +244,6 @@ do
 		
 		st:SetDisplayCols(st.cols);
 		st:SetDisplayRows(st.displayRows, st.rowHeight);
-		st:SetData({1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22});
 		return st;
 	end
 end
