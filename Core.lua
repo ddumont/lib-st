@@ -46,6 +46,8 @@ end
 
 do 
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
+	local defaulthighlight = { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 };
+
 	local ScrollPaneBackdrop  = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -61,7 +63,7 @@ do
 	end
 	
 	local SetWidth = function(self)
-		local width = 12;
+		local width = 13;
 		for num, col in pairs(self.cols) do
 			width = width + col.width;
 		end
@@ -84,15 +86,16 @@ do
 				row:SetFrameStrata("HIGH");
 				row.highlight = row:CreateTexture(nil, "HIGHLIGHT");
 				row.highlight:SetAllPoints(row);
-				row.highlight:SetTexture(1.0,1.0,0.0,0.5);
+				local color = self.highlight;
+				row.highlight:SetTexture(color.r, color.g, color.b, color.a);
 				
 				self.rows[i] = row;
 				if i > 1 then 
 					row:SetPoint("TOPLEFT", self.rows[i-1], "BOTTOMLEFT", 0, 0);
 					row:SetPoint("TOPRIGHT", self.rows[i-1], "BOTTOMRIGHT", 0, 0);
 				else
-					row:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 6, -5);
-					row:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -6, -5);
+					row:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 4, -5);
+					row:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -4, -5);
 				end
 				row:SetHeight(rowHeight);
 			end
@@ -111,7 +114,7 @@ do
 				if j > 1 then 
 					col:SetPoint("TOPLEFT", row.cols[j-1], "TOPRIGHT", 0, 0);
 				else
-					col:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0);
+					col:SetPoint("TOPLEFT", row, "TOPLEFT", 2, 0);
 				end
 				col:SetHeight(rowHeight);
 				col:SetWidth(self.cols[j].width);
@@ -139,8 +142,8 @@ do
 		self.cols = cols;
 
 		local row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
-		row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 0, 0);
-		row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", 0, 0);
+		row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 4, 0);
+		row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", -4, 0);
 		row:SetHeight(self.rowHeight);
 		row.cols = {};
 		for i = 1, #cols do 
@@ -160,10 +163,11 @@ do
 			end);
 			row.cols[i] = col;
 			local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
+			fs:SetAllPoints(col);
 			local align = cols[i].align or "LEFT";
-			fs:SetPoint(align, col, align, 6, 0); 
+			fs:SetJustifyH(align); 
+			
 			col:SetFontString(fs);
-									
 			fs:SetText(cols[i].name);
 			fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
 			col:SetPushedTextOffset(0,0);
@@ -173,7 +177,7 @@ do
 				rel = row.cols[i-1];
 				col:SetPoint("LEFT", rel, "RIGHT", 0, 0);
 			else
-				col:SetPoint("LEFT", rel, "LEFT", 0, 0);
+				col:SetPoint("LEFT", rel, "LEFT", 2, 0);
 			end
 			col:SetHeight(self.rowHeight);
 			col:SetWidth(cols[i].width);
@@ -224,7 +228,7 @@ do
 		self:Refresh();
 	end
 	
-	function ScrollingTable:CreateST(cols, numRows, rowHeight, parent)
+	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
 		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
 		framecount = framecount + 1;
@@ -241,6 +245,7 @@ do
 		st.SetData = SetData;
 		st.SortData = SortData;
 		
+		st.highlight = highlight or defaulthighlight;
 		st.displayRows = numRows or 12;
 		st.rowHeight = rowHeight or 15;
 		st.cols = cols or {
