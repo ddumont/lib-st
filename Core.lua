@@ -24,7 +24,7 @@ function ScrollingTable:ChatCommand()
 				if not data[row].cols then 
 					data[row].cols = {};
 				end
-				data[row].cols[col] = { ["value"] = (col-1.5)*(row + (col / 10)) };
+				data[row].cols[col] = { ["value"] = math.random(100) };
 				
 				-- data[row].cols[col].color    (cell text color)
 				-- data[row].cols[col].bgcolor    (cell text color)
@@ -80,15 +80,19 @@ do
 			local row = self.rows[i];
 			if not row then 
 				row = CreateFrame("Frame", self.frame:GetName().."Row"..i, self.frame);
+				row:EnableMouse(true);
+				row:SetFrameStrata("HIGH");
+				row.highlight = row:CreateTexture(nil, "HIGHLIGHT");
+				row.highlight:SetAllPoints(row);
+				row.highlight:SetTexture(1.0,1.0,0.0,0.5);
+				
 				self.rows[i] = row;
-				local rel = self.frame;
 				if i > 1 then 
-					rel = self.rows[i-1];
-					row:SetPoint("TOPLEFT", rel, "BOTTOMLEFT", 0, 0);
-					row:SetPoint("TOPRIGHT", rel, "BOTTOMRIGHT", 0, 0);
+					row:SetPoint("TOPLEFT", self.rows[i-1], "BOTTOMLEFT", 0, 0);
+					row:SetPoint("TOPRIGHT", self.rows[i-1], "BOTTOMRIGHT", 0, 0);
 				else
-					row:SetPoint("TOPLEFT", rel, "TOPLEFT", 6, -5);
-					row:SetPoint("TOPRIGHT", rel, "TOPRIGHT", -6, -5);
+					row:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 6, -5);
+					row:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", -6, -5);
 				end
 				row:SetHeight(rowHeight);
 			end
@@ -99,21 +103,15 @@ do
 			for j = 1, #self.cols do
 				local col = row.cols[j];
 				if not col then 
-					col = CreateFrame("Button", row:GetName().."Col"..j, row);
+					col = row:CreateFontString(row:GetName().."col"..j, "OVERLAY", "GameFontHighlightSmall");
 					row.cols[j] = col;
-				
-					local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
 					local align = self.cols[j].align or "LEFT";
-					fs:SetPoint(align, col, align, 0, 0); 
-					col:SetFontString(fs);
-					col:SetPushedTextOffset(0,0);
+					col:SetJustifyH(align); 
 				end	
-				local rel = row;
 				if j > 1 then 
-					rel = row.cols[j-1];
-					col:SetPoint("LEFT", rel, "RIGHT", 0, 0);
+					col:SetPoint("TOPLEFT", row.cols[j-1], "TOPRIGHT", 0, 0);
 				else
-					col:SetPoint("LEFT", rel, "LEFT", 0, 0);
+					col:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0);
 				end
 				col:SetHeight(rowHeight);
 				col:SetWidth(self.cols[j].width);
@@ -122,6 +120,8 @@ do
 			col = row.cols[j];
 			while col do
 				col:Hide();
+				j = j + 1;
+				col = row.cols[j];
 			end
 		end
 		
@@ -274,10 +274,9 @@ do
 						local celldisplay = st.rows[i].cols[col];
 						if st.data[row] then
 							local celldata = st.data[st.sorttable[row]].cols[col];
-							celldisplay:SetText(celldata.value);
-							local fs = celldisplay:GetFontString();
 							local color = celldata.color or st.cols[col].color or st.data[st.sorttable[row]].color or defaultcolor;
-							fs:SetTextColor(color.r, color.g, color.b, color.a);
+							celldisplay:SetText(celldata.value);
+							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);
 						else
 							celldisplay:SetText("");
 						end
