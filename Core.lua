@@ -24,18 +24,18 @@ function ScrollingTable:ChatCommand()
 				if not data[row].cols then 
 					data[row].cols = {};
 				end
-				data[row].cols[col] = { ["value"] = row + (col / 10) };
+				data[row].cols[col] = { ["value"] = (col-1.5)*(row + (col / 10)) };
 				
 				-- data[row].cols[col].color    (cell text color)
 				-- data[row].cols[col].bgcolor    (cell text color)
-				-- etc
 			end
 			
 			-- data[row].color
 			-- data[row].bgcolor
 			-- data[row].highcolor
-			-- etc
 		end 
+		data[5].cols[1].color = { ["r"] = 0.5, ["g"] = 1.0, ["b"] = 0.5, ["a"] = 1.0 };
+		data[5].color = { ["r"] = 1.0, ["g"] = 0.5, ["b"] = 0.5, ["a"] = 1.0 };
 		self.st:SetData(data);
 	elseif self.st.showing then 
 		self.st:Hide();
@@ -45,6 +45,7 @@ function ScrollingTable:ChatCommand()
 end
 
 do 
+	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
 	local ScrollPaneBackdrop  = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -134,8 +135,9 @@ do
 	end
 	
 	local SetDisplayCols = function(self, cols)
+		local ref = self; -- save reference for a closure
 		self.cols = cols;
-		
+
 		local row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
 		row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 0, 0);
 		row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", 0, 0);
@@ -143,6 +145,19 @@ do
 		row.cols = {};
 		for i = 1, #cols do 
 			col = CreateFrame("Button", row:GetName().."Col"..i, row);
+			col:SetScript("OnClick", function (self)
+				for j = 1, #ref.cols do 
+					if j ~= i then 
+						ref.cols[j].sort = nil;
+					end
+				end
+				if ref.cols[i].sort and ref.cols[i].sort:lower() == "asc" then 
+					ref.cols[i].sort = "dsc";
+				else
+					ref.cols[i].sort = "asc";
+				end
+				ref:SortData();
+			end);
 			row.cols[i] = col;
 			local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
 			local align = cols[i].align or "LEFT";
@@ -178,9 +193,37 @@ do
 	
 	local SetData = function(self, data)
 		self.data = data;
-		self:Refresh();
+		if not(self.sorttable) or (#self.sorttable > #data)then 
+			self.sorttable = {};
+		end
+		if #self.sorttable ~= #self.data then
+			for i = 1, #self.data do 
+				self.sorttable[i] = i;
+			end
+		end 
+		self:SortData();
 	end
 		
+	local SortData = function(self)
+		local i, sortby = 1, nil;
+		while i <= #self.cols and not sortby do
+			if self.cols[i].sort then 
+				sortby = i;
+			end
+			i = i + 1;
+		end
+		if sortby then 
+			table.sort(self.sorttable, function(a,b)
+				if self.cols[sortby].sort:lower() == "asc" then 
+					return self.data[a].cols[sortby].value > self.data[b].cols[sortby].value;
+				else
+					return self.data[a].cols[sortby].value < self.data[b].cols[sortby].value;
+				end
+			end);
+		end
+		self:Refresh();
+	end
+	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, parent)
 		local st = {};
 		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
@@ -196,11 +239,16 @@ do
 		st.SetWidth = SetWidth;
 		st.SetDisplayCols = SetDisplayCols;
 		st.SetData = SetData;
+		st.SortData = SortData;
 		
 		st.displayRows = numRows or 12;
 		st.rowHeight = rowHeight or 15;
 		st.cols = cols or {
-			{ ["name"] = "Test 1", ["width"] = 50 }, -- [1]
+			{
+				["name"] = "Test 1",
+			 	["width"] = 50,
+			 	["color"] = { ["r"] = 0.5, ["g"] = 0.5, ["b"] = 1.0, ["a"] = 1.0 },
+			}, -- [1]
 			{ ["name"] = "Test 2", ["width"] = 50, ["align"] = "CENTER" }, -- [2]
 			{ ["name"] = "Test 3", ["width"] = 50, ["align"] = "RIGHT" }, -- [2]
 		};
@@ -220,16 +268,16 @@ do
 			local o = FauxScrollFrame_GetOffset(scrollframe);
 			
 			for i = 1, st.displayRows do
-				local row = i + o;
-				
+				local row = i + o;	
 				if st.rows then
 					for col = 1, #st.cols do
 						local celldisplay = st.rows[i].cols[col];
 						if st.data[row] then
-							local celldata = st.data[row].cols[col];
+							local celldata = st.data[st.sorttable[row]].cols[col];
 							celldisplay:SetText(celldata.value);
 							local fs = celldisplay:GetFontString();
-							fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
+							local color = celldata.color or st.cols[col].color or st.data[st.sorttable[row]].color or defaultcolor;
+							fs:SetTextColor(color.r, color.g, color.b, color.a);
 						else
 							celldisplay:SetText("");
 						end
