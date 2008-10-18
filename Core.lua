@@ -341,14 +341,31 @@ do
 						local celldisplay = st.rows[i].cols[col];
 						if st.data[row] then
 							local celldata = st.data[st.sorttable[row]].cols[col];
-							local color = celldata.color or st.cols[col].color or st.data[st.sorttable[row]].color or defaultcolor;
 							if type(celldata.value) == "function" then 
-								celldisplay:SetText( celldata.value(unpack(celldata.args or {})) );
+								celldisplay:SetText(celldata.value(unpack(celldata.args or {})) );
 							else
 								celldisplay:SetText(celldata.value);
 							end
+							
+							local color = celldata.color;
+							local colorargs = nil;
+							if not color then 
+							 	color = st.cols[col].color;
+							 	if not color then 
+							 		color = st.data[st.sorttable[row]].color
+							 		if not color then 
+							 			color = defaultcolor;
+							 		else
+							 			colorargs = st.data[st.sorttable[row]].colorargs;
+							 		end
+							 	else
+							 		colorargs = st.cols[col].colorargs;
+							 	end
+							else
+								colorargs = celldata.colorargs;
+							end	
 							if type(color) == "function" then 
-								color = color(unpack(celldata.colorargs or {}));
+								color = color(unpack(colorargs or {}));
 							end
 							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);						
 						else
