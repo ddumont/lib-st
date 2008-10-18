@@ -155,8 +155,10 @@ do
 						ref.cols[j].sort = nil;
 					end
 				end
-				local sortorder = "asc"; -- sort asc first, then dsc
-				if ref.cols[i].sort and ref.cols[i].sort:lower() == "asc" then 
+				local sortorder = "asc";
+				if not ref.cols[i].sort and ref.cols[i].defaultsort then
+					sortorder = ref.cols[i].defaultsort; -- sort by columns default sort first;
+				elseif ref.cols[i].sort and ref.cols[i].sort:lower() == "asc" then 
 					sortorder = "dsc";
 				end
 				ref.cols[i].sort = sortorder;
