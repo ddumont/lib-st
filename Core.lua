@@ -25,14 +25,9 @@ function ScrollingTable:ChatCommand()
 					data[row].cols = {};
 				end
 				data[row].cols[col] = { ["value"] = math.random(100) };
-				
 				-- data[row].cols[col].color    (cell text color)
-				-- data[row].cols[col].bgcolor    (cell text color)
 			end
-			
-			-- data[row].color
-			-- data[row].bgcolor
-			-- data[row].highcolor
+			-- data[row].color (row text color)
 		end 
 		data[5].cols[1].color = { ["r"] = 0.5, ["g"] = 1.0, ["b"] = 0.5, ["a"] = 1.0 };
 		data[5].color = { ["r"] = 1.0, ["g"] = 0.5, ["b"] = 0.5, ["a"] = 1.0 };
@@ -47,6 +42,7 @@ end
 do 
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
 	local defaulthighlight = { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 };
+	local defaultbgcolor = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 };
 
 	local ScrollPaneBackdrop  = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
@@ -71,6 +67,22 @@ do
 		self:Refresh();
 	end
 	
+	local SetHighLightColor = function(frame, color)
+		if not frame.highlight then 
+			frame.highlight = frame:CreateTexture(nil, "HIGHLIGHT");
+			frame.highlight:SetAllPoints(frame);
+		end
+		frame.highlight:SetTexture(color.r, color.g, color.b, color.a);
+	end
+	
+	local SetBackgroundColor = function(frame, color)
+		if not frame.background then 
+			frame.background = frame:CreateTexture(nil, "BACKGROUND");
+			frame.background:SetAllPoints(frame);
+		end
+		frame.background:SetTexture(color.r, color.g, color.b, color.a);
+	end
+	
 	local SetDisplayRows = function(self, num, rowHeight)
 		-- should always set columns first
 		self.displayRows = num;
@@ -84,10 +96,7 @@ do
 				row = CreateFrame("Frame", self.frame:GetName().."Row"..i, self.frame);
 				row:EnableMouse(true);
 				row:SetFrameStrata("HIGH");
-				row.highlight = row:CreateTexture(nil, "HIGHLIGHT");
-				row.highlight:SetAllPoints(row);
-				local color = self.highlight;
-				row.highlight:SetTexture(color.r, color.g, color.b, color.a);
+				SetHighLightColor(row, self.highlight);
 				
 				self.rows[i] = row;
 				if i > 1 then 
@@ -111,13 +120,14 @@ do
 					local align = self.cols[j].align or "LEFT";
 					col:SetJustifyH(align); 
 				end	
+				local lrpadding = 5;
 				if j > 1 then 
-					col:SetPoint("TOPLEFT", row.cols[j-1], "TOPRIGHT", 0, 0);
+					col:SetPoint("TOPLEFT", row.cols[j-1], "TOPRIGHT", lrpadding, 0);
 				else
-					col:SetPoint("TOPLEFT", row, "TOPLEFT", 2, 0);
+					col:SetPoint("TOPLEFT", row, "TOPLEFT", 2+(lrpadding/2), 0);
 				end
 				col:SetHeight(rowHeight);
-				col:SetWidth(self.cols[j].width);
+				col:SetWidth(self.cols[j].width-lrpadding);
 			end
 			j = #self.cols + 1;
 			col = row.cols[j];
@@ -138,7 +148,6 @@ do
 	end
 	
 	local SetDisplayCols = function(self, cols)
-		local ref = self; -- save reference for a closure
 		self.cols = cols;
 
 		local row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
@@ -148,19 +157,22 @@ do
 		row.cols = {};
 		for i = 1, #cols do 
 			col = CreateFrame("Button", row:GetName().."Col"..i, row);
+			
+			local ref = self; -- reference saved for closure
 			col:SetScript("OnClick", function (self)
 				for j = 1, #ref.cols do 
-					if j ~= i then 
+					if j ~= i then -- clear out all other sort marks
 						ref.cols[j].sort = nil;
 					end
 				end
+				local sortorder = "asc"; -- sort asc first, then dsc
 				if ref.cols[i].sort and ref.cols[i].sort:lower() == "asc" then 
-					ref.cols[i].sort = "dsc";
-				else
-					ref.cols[i].sort = "asc";
+					sortorder = "dsc";
 				end
+				ref.cols[i].sort = sortorder;
 				ref:SortData();
 			end);
+			
 			row.cols[i] = col;
 			local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
 			fs:SetAllPoints(col);
@@ -169,18 +181,30 @@ do
 			
 			col:SetFontString(fs);
 			fs:SetText(cols[i].name);
-			fs:SetTextColor(1.0, 0.0, 0.0, 1.0);
+			fs:SetTextColor(1.0, 1.0, 1.0, 1.0);
 			col:SetPushedTextOffset(0,0);
 				
-			local rel = row;
 			if i > 1 then 
-				rel = row.cols[i-1];
-				col:SetPoint("LEFT", rel, "RIGHT", 0, 0);
+				col:SetPoint("LEFT", row.cols[i-1], "RIGHT", 0, 0);
 			else
-				col:SetPoint("LEFT", rel, "LEFT", 2, 0);
+				col:SetPoint("LEFT", row, "LEFT", 2, 0);
 			end
 			col:SetHeight(self.rowHeight);
 			col:SetWidth(cols[i].width);
+			
+			local color = cols[i].bgcolor;
+			if (color) then 
+				local colibg = "col"..i.."bg";
+				local bg = self.frame[colibg]; 
+				if not bg then 
+					bg = self.frame:CreateTexture(nil, "OVERLAY");
+					self.frame[colibg] = bg;
+				end 
+				bg:SetPoint("BOTTOM", self.frame, "BOTTOM", 0, 4);
+				bg:SetPoint("TOPLEFT", col, "BOTTOMLEFT", 0, -4);
+				bg:SetPoint("TOPRIGHT", col, "BOTTOMRIGHT", 0, -4);
+				bg:SetTexture(color.r, color.g, color.b, color.a);
+			end
 		end
 		
 		self:SetWidth();
@@ -254,8 +278,18 @@ do
 			 	["width"] = 50,
 			 	["color"] = { ["r"] = 0.5, ["g"] = 0.5, ["b"] = 1.0, ["a"] = 1.0 },
 			}, -- [1]
-			{ ["name"] = "Test 2", ["width"] = 50, ["align"] = "CENTER" }, -- [2]
-			{ ["name"] = "Test 3", ["width"] = 50, ["align"] = "RIGHT" }, -- [2]
+			{ 
+				["name"] = "Test 2", 
+				["width"] = 50, 
+				["align"] = "CENTER",
+				["bgcolor"] = { ["r"] = 1.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.2 },
+			}, -- [2]
+			{ 
+				["name"] = "Test 3", 
+				["width"] = 50, 
+				["align"] = "RIGHT",
+				["bgcolor"] = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.5 },
+			}, -- [2]
 		};
 		st.data = {};
 	
