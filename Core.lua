@@ -4,14 +4,6 @@ function ScrollingTable:OnInitialize()
     self:RegisterChatCommand("st", "ChatCommand");
 end
 
-function ScrollingTable:OnEnable()
-    self:Print("Enabled.");
-end
-
-function ScrollingTable:OnDisable()
-    self:Print("Disabled.");
-end
-
 function ScrollingTable:ChatCommand()
 	if not self.st then 
 		self.st = self:CreateST();
@@ -42,8 +34,8 @@ end
 do 
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
 	local defaulthighlight = { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 };
-	local defaultbgcolor = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 };
-
+	local lrpadding = 2.5;
+	
 	local ScrollPaneBackdrop  = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -95,7 +87,6 @@ do
 			if not row then 
 				row = CreateFrame("Frame", self.frame:GetName().."Row"..i, self.frame);
 				row:EnableMouse(true);
-				row:SetFrameStrata("HIGH");
 				SetHighLightColor(row, self.highlight);
 				
 				self.rows[i] = row;
@@ -120,14 +111,13 @@ do
 					local align = self.cols[j].align or "LEFT";
 					col:SetJustifyH(align); 
 				end	
-				local lrpadding = 5;
 				if j > 1 then 
-					col:SetPoint("TOPLEFT", row.cols[j-1], "TOPRIGHT", lrpadding, 0);
+					col:SetPoint("LEFT", row.cols[j-1], "RIGHT", 2 * lrpadding, 0);
 				else
-					col:SetPoint("TOPLEFT", row, "TOPLEFT", 2+(lrpadding/2), 0);
+					col:SetPoint("LEFT", row, "LEFT", 2 + lrpadding, 0);
 				end
 				col:SetHeight(rowHeight);
-				col:SetWidth(self.cols[j].width-lrpadding);
+				col:SetWidth(self.cols[j].width - (2 * lrpadding));
 			end
 			j = #self.cols + 1;
 			col = row.cols[j];
@@ -176,6 +166,8 @@ do
 			row.cols[i] = col;
 			local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
 			fs:SetAllPoints(col);
+			fs:SetPoint("LEFT", col, "LEFT", lrpadding, 0);
+			fs:SetPoint("RIGHT", col, "RIGHT", -lrpadding, 0);
 			local align = cols[i].align or "LEFT";
 			fs:SetJustifyH(align); 
 			
@@ -183,7 +175,7 @@ do
 			fs:SetText(cols[i].name);
 			fs:SetTextColor(1.0, 1.0, 1.0, 1.0);
 			col:SetPushedTextOffset(0,0);
-				
+			
 			if i > 1 then 
 				col:SetPoint("LEFT", row.cols[i-1], "RIGHT", 0, 0);
 			else
@@ -323,7 +315,7 @@ do
 				["width"] = 50, 
 				["align"] = "RIGHT",
 				["bgcolor"] = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.5 },
-			}, -- [2]
+			}, -- [3]
 		};
 		st.data = {};
 	
@@ -349,11 +341,14 @@ do
 							local celldata = st.data[st.sorttable[row]].cols[col];
 							local color = celldata.color or st.cols[col].color or st.data[st.sorttable[row]].color or defaultcolor;
 							if type(celldata.value) == "function" then 
-								celldisplay:SetText( celldata.value(unpack(colb.args or {})) );
+								celldisplay:SetText( celldata.value(unpack(celldata.args or {})) );
 							else
 								celldisplay:SetText(celldata.value);
 							end
-							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);
+							if type(color) == "function" then 
+								color = color(unpack(celldata.colorargs or {}));
+							end
+							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);						
 						else
 							celldisplay:SetText("");
 						end
