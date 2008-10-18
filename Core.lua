@@ -242,16 +242,50 @@ do
 		end
 		if sortby then 
 			table.sort(self.sorttable, function(a,b)
-				if self.cols[sortby].sort:lower() == "asc" then 
-					return self.data[a].cols[sortby].value > self.data[b].cols[sortby].value;
+				local cola, colb = self.data[a].cols[sortby], self.data[b].cols[sortby];
+				local a1, b1 = cola.value, colb.value;
+				if type(a1) == "function" then 
+					a1 = a1(unpack(cola.args or {}));
+				end
+				if type(b1) == "function" then 
+					b1 = b1(unpack(colb.args or {}));
+				end
+				
+				if type(a1) ~= type(b1) then
+					local typea, typeb = type(a1), type(b1);
+					if typea == "number" and typeb == "string" then 
+						if tonumber(typeb) then -- is it a number in a string?
+							b1 = StringToNumber(b1); -- "" = 0
+						else
+							a1 = tostring(a1);
+						end
+					elseif typea == "string" and typeb == "number" then 
+						if tonumber(typea) then -- is it a number in a string?
+							a1 = StringToNumber(a1); -- "" = 0
+						else
+							b1 = tostring(b1);
+						end
+					end
+				end
+
+				if self.cols[sortby].sort:lower() == "asc" then 		
+					return a1 > b1;
 				else
-					return self.data[a].cols[sortby].value < self.data[b].cols[sortby].value;
+					return a1 < b1;
 				end
 			end);
 		end
 		self:Refresh();
 	end
 	
+	local StringToNumber = function(str)
+		if str == "" then 
+			return 0;
+		else
+			return tonumber(str)
+		end
+	end
+	 
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
 		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
@@ -314,7 +348,11 @@ do
 						if st.data[row] then
 							local celldata = st.data[st.sorttable[row]].cols[col];
 							local color = celldata.color or st.cols[col].color or st.data[st.sorttable[row]].color or defaultcolor;
-							celldisplay:SetText(celldata.value);
+							if type(celldata.value) == "function" then 
+								celldisplay:SetText( celldata.value(unpack(colb.args or {})) );
+							else
+								celldisplay:SetText(celldata.value);
+							end
 							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);
 						else
 							celldisplay:SetText("");
