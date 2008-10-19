@@ -236,37 +236,7 @@ do
 		end
 		if sortby then 
 			table.sort(self.sorttable, function(a,b)
-				local cola, colb = self.data[a].cols[sortby], self.data[b].cols[sortby];
-				local a1, b1 = cola.value, colb.value;
-				if type(a1) == "function" then 
-					a1 = a1(unpack(cola.args or {}));
-				end
-				if type(b1) == "function" then 
-					b1 = b1(unpack(colb.args or {}));
-				end
-				
-				if type(a1) ~= type(b1) then
-					local typea, typeb = type(a1), type(b1);
-					if typea == "number" and typeb == "string" then 
-						if tonumber(typeb) then -- is it a number in a string?
-							b1 = StringToNumber(b1); -- "" = 0
-						else
-							a1 = tostring(a1);
-						end
-					elseif typea == "string" and typeb == "number" then 
-						if tonumber(typea) then -- is it a number in a string?
-							a1 = StringToNumber(a1); -- "" = 0
-						else
-							b1 = tostring(b1);
-						end
-					end
-				end
-
-				if self.cols[sortby].sort:lower() == "asc" then 		
-					return a1 > b1;
-				else
-					return a1 < b1;
-				end
+				return self:CompareSort(a, b, sortby);
 			end);
 		end
 		self:Refresh();
@@ -277,6 +247,45 @@ do
 			return 0;
 		else
 			return tonumber(str)
+		end
+	end
+	
+	local CompareSort = function (self, a, b, sortby)
+		local cola, colb = self.data[a].cols[sortby], self.data[b].cols[sortby];
+		local a1, b1 = cola.value, colb.value;
+		if type(a1) == "function" then 
+			a1 = a1(unpack(cola.args or {}));
+		end
+		if type(b1) == "function" then 
+			b1 = b1(unpack(colb.args or {}));
+		end
+		
+		if type(a1) ~= type(b1) then
+			local typea, typeb = type(a1), type(b1);
+			if typea == "number" and typeb == "string" then 
+				if tonumber(typeb) then -- is it a number in a string?
+					b1 = StringToNumber(b1); -- "" = 0
+				else
+					a1 = tostring(a1);
+				end
+			elseif typea == "string" and typeb == "number" then 
+				if tonumber(typea) then -- is it a number in a string?
+					a1 = StringToNumber(a1); -- "" = 0
+				else
+					b1 = tostring(b1);
+				end
+			end
+		end
+		
+		if a1 == b1 and self.cols[sortby].sortnext then 
+			return self:CompareSort(a, b, self.cols[sortby].sortnext);
+		else
+			local direction = self.cols[sortby].sort or self.cols[sortby].defaultsort or "asc";
+			if direction:lower() == "asc" then 		
+				return a1 > b1;
+			else
+				return a1 < b1;
+			end
 		end
 	end
 	 
@@ -296,6 +305,7 @@ do
 		st.SetDisplayCols = SetDisplayCols;
 		st.SetData = SetData;
 		st.SortData = SortData;
+		st.CompareSort = CompareSort;
 		
 		st.highlight = highlight or defaulthighlight;
 		st.displayRows = numRows or 12;
