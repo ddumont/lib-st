@@ -16,7 +16,7 @@ function ScrollingTable:ChatCommand()
 				if not data[row].cols then 
 					data[row].cols = {};
 				end
-				data[row].cols[col] = { ["value"] = math.random(100) };
+				data[row].cols[col] = { ["value"] = math.random(50) };
 				-- data[row].cols[col].color    (cell text color)
 			end
 			-- data[row].color (row text color)
@@ -24,6 +24,9 @@ function ScrollingTable:ChatCommand()
 		data[5].cols[1].color = { ["r"] = 0.5, ["g"] = 1.0, ["b"] = 0.5, ["a"] = 1.0 };
 		data[5].color = { ["r"] = 1.0, ["g"] = 0.5, ["b"] = 0.5, ["a"] = 1.0 };
 		self.st:SetData(data);
+		self.st:SetFilter(function(self, row)
+			return row.cols[1].value > 10; 
+		end);
 	elseif self.st.showing then 
 		self.st:Hide();
 	else
@@ -236,7 +239,12 @@ do
 	
 	local SetData = function(self, data)
 		self.data = data;
-		if not(self.sorttable) or (#self.sorttable > #data)then 
+		self:SortData();
+	end
+		
+	local SortData = function(self)
+		-- sanity check
+		if not(self.sorttable) or (#self.sorttable > #self.data)then 
 			self.sorttable = {};
 		end
 		if #self.sorttable ~= #self.data then
@@ -244,10 +252,8 @@ do
 				self.sorttable[i] = i;
 			end
 		end 
-		self:SortData();
-	end
 		
-	local SortData = function(self)
+		-- go on sorting
 		local i, sortby = 1, nil;
 		while i <= #self.cols and not sortby do
 			if self.cols[i].sort then 
@@ -260,6 +266,7 @@ do
 				return self:CompareSort(a, b, sortby);
 			end);
 		end
+		self.filtered = self:DoFilter();
 		self:Refresh();
 	end
 	
@@ -309,7 +316,26 @@ do
 			end
 		end
 	end
-	 
+	
+	local Filter = function(self, ...)
+		return true;
+	end
+	
+	local SetFilter = function(self, Filter)
+		self.Filter = Filter;
+		self:SortData();
+	end
+	
+	local DoFilter = function(self)
+		local result = {};
+		for row = 1, #self.data do 
+			if self:Filter(self.data[self.sorttable[row]]) then
+				table.insert(result, self.sorttable[row]);
+			end
+		end
+		return result;
+	end
+	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
 		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
@@ -327,6 +353,9 @@ do
 		st.SetData = SetData;
 		st.SortData = SortData;
 		st.CompareSort = CompareSort;
+		
+		st.SetFilter = SetFilter;
+		st.DoFilter = DoFilter;
 		
 		st.highlight = highlight or defaulthighlight;
 		st.displayRows = numRows or 12;
@@ -361,8 +390,8 @@ do
 		scrollframe:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0);
 		scrollframe:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, 0);
 		
-		st.Refresh = function()
-			FauxScrollFrame_Update(scrollframe, #st.data, st.displayRows, st.rowHeight);
+		st.Refresh = function(self)	
+			FauxScrollFrame_Update(scrollframe, #st.filtered, st.displayRows, st.rowHeight);
 			local o = FauxScrollFrame_GetOffset(scrollframe);
 			
 			for i = 1, st.displayRows do
@@ -370,9 +399,9 @@ do
 				if st.rows then
 					for col = 1, #st.cols do
 						local celldisplay = st.rows[i].cols[col];
-						if st.data[row] then
+						if st.data[st.filtered[row]] then
 							st.rows[i]:Show();
-							local celldata = st.data[st.sorttable[row]].cols[col];
+							local celldata = st.data[st.filtered[row]].cols[col];
 							if type(celldata.value) == "function" then 
 								celldisplay:SetText(celldata.value(unpack(celldata.args or {})) );
 							else
@@ -384,11 +413,11 @@ do
 							if not color then 
 							 	color = st.cols[col].color;
 							 	if not color then 
-							 		color = st.data[st.sorttable[row]].color
+							 		color = st.data[st.filtered[row]].color
 							 		if not color then 
 							 			color = defaultcolor;
 							 		else
-							 			colorargs = st.data[st.sorttable[row]].colorargs;
+							 			colorargs = st.data[st.filtered[row]].colorargs;
 							 		end
 							 	else
 							 		colorargs = st.cols[col].colorargs;
@@ -412,7 +441,8 @@ do
 		scrollframe:SetScript("OnVerticalScroll", function(self, offset)
 			FauxScrollFrame_OnVerticalScroll(self, offset, st.rowHeight, st.Refresh);
 		end);
-		
+	
+		st:SetFilter(Filter);
 		st:SetDisplayCols(st.cols);
 		st:SetDisplayRows(st.displayRows, st.rowHeight);
 		return st;
