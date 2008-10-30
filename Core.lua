@@ -76,6 +76,8 @@ do
 	end
 	
 	local SetDisplayRows = function(self, num, rowHeight)
+		local table = self;  -- save for closure later
+		
 		-- should always set columns first
 		self.displayRows = num;
 		self.rowHeight = rowHeight;
@@ -85,8 +87,28 @@ do
 		for i = 1, num do 
 			local row = self.rows[i];
 			if not row then 
-				row = CreateFrame("Frame", self.frame:GetName().."Row"..i, self.frame);
+				row = CreateFrame("Button", self.frame:GetName().."Row"..i, self.frame);
 				row:EnableMouse(true);
+				row:SetScript("OnClick", function(self, button, down)
+					 local x, y = GetCursorPosition();
+					 x = x / self:GetEffectiveScale();
+					 for j = 1, #self.cols do
+						local col = self.cols[j];
+						if x >= col:GetLeft() and x <= col:GetRight() then 
+							local cellclick = table.data[i].cols[j].onclick;
+							if cellclick and type(cellclick) == "function" then 
+								cellclick(unpack(table.data[i].cols[j].onclickargs or {}));
+								return;
+							end
+						end
+					 end
+				 	-- column not found...
+					local rowclick = table.data[i].onclick;
+					if rowclick and type(rowclick) == "function" then 
+						rowclick(unpack(table.data[i].onclickargs or {}));
+					end
+				end);
+				
 				SetHighLightColor(row, self.highlight);
 				
 				self.rows[i] = row;
@@ -138,31 +160,30 @@ do
 	end
 	
 	local SetDisplayCols = function(self, cols)
+		local table = self; -- reference saved for closure
 		self.cols = cols;
-
+		
 		local row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
 		row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 4, 0);
 		row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", -4, 0);
 		row:SetHeight(self.rowHeight);
 		row.cols = {};
 		for i = 1, #cols do 
-			col = CreateFrame("Button", row:GetName().."Col"..i, row);
-			
-			local ref = self; -- reference saved for closure
+			col = CreateFrame("Button", row:GetName().."Col"..i, row);			
 			col:SetScript("OnClick", function (self)
-				for j = 1, #ref.cols do 
+				for j = 1, #table.cols do 
 					if j ~= i then -- clear out all other sort marks
-						ref.cols[j].sort = nil;
+						table.cols[j].sort = nil;
 					end
 				end
 				local sortorder = "asc";
-				if not ref.cols[i].sort and ref.cols[i].defaultsort then
-					sortorder = ref.cols[i].defaultsort; -- sort by columns default sort first;
-				elseif ref.cols[i].sort and ref.cols[i].sort:lower() == "asc" then 
+				if not table.cols[i].sort and table.cols[i].defaultsort then
+					sortorder = table.cols[i].defaultsort; -- sort by columns default sort first;
+				elseif table.cols[i].sort and table.cols[i].sort:lower() == "asc" then 
 					sortorder = "dsc";
 				end
-				ref.cols[i].sort = sortorder;
-				ref:SortData();
+				table.cols[i].sort = sortorder;
+				table:SortData();
 			end);
 			
 			row.cols[i] = col;
@@ -350,6 +371,7 @@ do
 					for col = 1, #st.cols do
 						local celldisplay = st.rows[i].cols[col];
 						if st.data[row] then
+							st.rows[i]:Show();
 							local celldata = st.data[st.sorttable[row]].cols[col];
 							if type(celldata.value) == "function" then 
 								celldisplay:SetText(celldata.value(unpack(celldata.args or {})) );
@@ -379,6 +401,7 @@ do
 							end
 							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);						
 						else
+							st.rows[i]:Hide();
 							celldisplay:SetText("");
 						end
 					end
