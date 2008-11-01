@@ -19,6 +19,9 @@ function ScrollingTable:ChatCommand()
 				data[row].cols[col] = { ["value"] = math.random(50) };
 				-- data[row].cols[col].color    (cell text color)
 			end
+			data[row].onclick = function ()
+				ScrollingTable:Print("First Column:",data[row].cols[1].value);
+			end
 			-- data[row].color (row text color)
 		end 
 		data[5].cols[1].color = { ["r"] = 0.5, ["g"] = 1.0, ["b"] = 0.5, ["a"] = 1.0 };
@@ -95,18 +98,19 @@ do
 				row:SetScript("OnClick", function(self, button, down)
 					 local x, y = GetCursorPosition();
 					 x = x / self:GetEffectiveScale();
+					 local realindex = table.filtered[i+table.offset];
 					 for j = 1, #self.cols do
 						local col = self.cols[j];
 						if x >= col:GetLeft() and x <= col:GetRight() then 
-							local cellclick = table.data[i].cols[j].onclick;
+							local cellclick = table.data[realindex].cols[j].onclick;
 							if cellclick and type(cellclick) == "function" then 
-								cellclick(unpack(table.data[i].cols[j].onclickargs or {}));
+								cellclick(unpack(table.data[realindex].cols[j].onclickargs or {}));
 								return;
 							end
 						end
-					 end
+					end
 				 	-- column not found...
-					local rowclick = table.data[i].onclick;
+					local rowclick = table.data[realindex].onclick;
 					if rowclick and type(rowclick) == "function" then 
 						rowclick(unpack(table.data[i].onclickargs or {}));
 					end
@@ -393,6 +397,7 @@ do
 		st.Refresh = function(self)	
 			FauxScrollFrame_Update(scrollframe, #st.filtered, st.displayRows, st.rowHeight);
 			local o = FauxScrollFrame_GetOffset(scrollframe);
+			st.offset = o;
 			
 			for i = 1, st.displayRows do
 				local row = i + o;	
