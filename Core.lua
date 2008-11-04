@@ -26,16 +26,10 @@ function ScrollingTable:ChatCommand()
 				ScrollingTable:Print("enter! row", row, "col 2 value", data[row].cols[2].value);
 			end
 			data[row].cols[2].onleave = function(...)
-				ScrollingTable:Print("enter! row", row, "col 2 value", data[row].cols[2].value);
+				ScrollingTable:Print("leave! row", row, "col 2 value", data[row].cols[2].value);
 			end
 			data[row].onclick = function(self, event, ...)
 				ScrollingTable:Print("click! row", row);
-			end
-			data[row].onenter = function(...)
-				ScrollingTable:Print("enter! row", row);
-			end
-			data[row].onleave = function(...)
-				ScrollingTable:Print("leave! row", row);
 			end
 			-- data[row].color (row text color)
 		end 
@@ -161,7 +155,7 @@ do
 					end
 				end);
 				col:SetScript("OnEnter", function(cellFrame, ...)
-					SetHighLightColor(row, defaulthighlight);
+					SetHighLightColor(row, table.highlight);
 					local realindex = table.filtered[i+table.offset];
 					local celldata = table.data[realindex].cols[j];
 					FireHandlerWithArgs("onenter", celldata, cellFrame, ...);
