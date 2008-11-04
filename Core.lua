@@ -19,14 +19,23 @@ function ScrollingTable:ChatCommand()
 				data[row].cols[col] = { ["value"] = math.random(50) };
 				-- data[row].cols[col].color    (cell text color)
 			end
+			data[row].cols[1].onclick = function(self, event, ...)
+				ScrollingTable:Print("click! row", row, "col 1 value", data[row].cols[1].value);
+			end
+			data[row].cols[2].onenter = function(...)
+				ScrollingTable:Print("enter! row", row, "col 2 value", data[row].cols[2].value);
+			end
+			data[row].cols[2].onleave = function(...)
+				ScrollingTable:Print("enter! row", row, "col 2 value", data[row].cols[2].value);
+			end
 			data[row].onclick = function(self, event, ...)
-				ScrollingTable:Print(data[row].cols[1].value);
+				ScrollingTable:Print("click! row", row);
 			end
 			data[row].onenter = function(...)
-				ScrollingTable:Print(...);
+				ScrollingTable:Print("enter! row", row);
 			end
 			data[row].onleave = function(...)
-				ScrollingTable:Print(...);
+				ScrollingTable:Print("leave! row", row);
 			end
 			-- data[row].color (row text color)
 		end 
@@ -73,7 +82,7 @@ do
 	
 	local SetHighLightColor = function(frame, color)
 		if not frame.highlight then 
-			frame.highlight = frame:CreateTexture(nil, "HIGHLIGHT");
+			frame.highlight = frame:CreateTexture(nil, "OVERLAY");
 			frame.highlight:SetAllPoints(frame);
 		end
 		frame.highlight:SetTexture(color.r, color.g, color.b, color.a);
@@ -100,51 +109,6 @@ do
 			local row = self.rows[i];
 			if not row then 
 				row = CreateFrame("Button", self.frame:GetName().."Row"..i, self.frame);
-				row:EnableMouse(true);
-				row:SetScript("OnClick", function(rowFrame, ...)
-					local realindex = table.filtered[i+table.offset];
-					local x, y = GetCursorPosition();
-					x = x / rowFrame:GetEffectiveScale();
-					for j, col in ipairs(row.cols) do
-						if x >= col:GetLeft() and x <= col:GetRight() then 
-							local celldata = table.data[realindex].cols[j];
-							if celldata.onclick and celldata.onclickargs then 
-								celldata.onclick(unpack(celldata.onclickargs));
-								return;
-							elseif celldata.onclick then 
-								celldata.onclick(rowFrame, ...);
-								return;
-							end
-						end
-					end
-				 	-- cell handler not found...
-					local rowdata = table.data[realindex];
-					if rowdata.onclick and rowdata.onclickargs then 
-						rowdata.onclick(unpack(celldata.onclickargs));
-					elseif rowdata.onclick then 
-						rowdata.onclick(rowFrame, ...);
-					end
-				end);
-				row:SetScript("OnEnter", function(rowFrame, ...)
-					local realindex = table.filtered[i+table.offset];
-					local rowdata = table.data[realindex];
-					if rowdata.onenter and rowdata.onenterargs then 
-						rowdata.onenter(unpack(celldata.onenterargs));
-					elseif rowdata.onenter then 
-						rowdata.onenter(rowFrame, ...);
-					end
-				end);
-				row:SetScript("OnLeave", function(rowFrame, ...)
-					local realindex = table.filtered[i+table.offset];
-					local rowdata = table.data[realindex];
-					if rowdata.onleave and rowdata.onleaveargs then 
-						rowdata.onleave(unpack(celldata.onleaveargs));
-					elseif rowdata.onleave then 
-						rowdata.onleave(rowFrame, ...);
-					end
-				end);
-				SetHighLightColor(row, self.highlight);
-				
 				self.rows[i] = row;
 				if i > 1 then 
 					row:SetPoint("TOPLEFT", self.rows[i-1], "BOTTOMLEFT", 0, 0);
@@ -161,19 +125,85 @@ do
 			end
 			for j = 1, #self.cols do
 				local col = row.cols[j];
+				if not row.moo then 
+					row.moo = {};
+				end
+				local moo = row.moo[j];
 				if not col then 
-					col = row:CreateFontString(row:GetName().."col"..j, "OVERLAY", "GameFontHighlightSmall");
+					col = CreateFrame("Button", row:GetName().."col"..j, row);
+					col.text = row:CreateFontString(col:GetName().."text", "OVERLAY", "GameFontHighlightSmall");
 					row.cols[j] = col;
 					local align = self.cols[j].align or "LEFT";
-					col:SetJustifyH(align); 
+					col.text:SetJustifyH(align); 
 				end
+				col:EnableMouse(true);
+				col:SetScript("OnClick", function(cellFrame, ...)
+					local realindex = table.filtered[i+table.offset];
+					local celldata = table.data[realindex].cols[j];
+					if celldata.onclick and celldata.onclickargs then 
+						celldata.onclick(unpack(celldata.onclickargs));
+						return;
+					elseif celldata.onclick then 
+						celldata.onclick(cellFrame, ...);
+						return;
+					else
+						local rowdata = table.data[realindex];
+						if rowdata.onclick and rowdata.onclickargs then 
+							rowdata.onclick(unpack(celldata.onclickargs));
+						elseif rowdata.onclick then 
+							rowdata.onclick(row, ...);
+						end
+					end
+				end);
+				col:SetScript("OnEnter", function(cellFrame, ...)
+					SetHighLightColor(row, defaulthighlight);
+					local realindex = table.filtered[i+table.offset];
+					local celldata = table.data[realindex].cols[j];
+					if celldata.onenter and celldata.onenterargs then 
+						celldata.onenter(unpack(celldata.onenterargs));
+						return;
+					elseif celldata.onenter then 
+						celldata.onenter(cellFrame, ...);
+						return;
+					else
+						local rowdata = table.data[realindex];
+						if rowdata.onenter and rowdata.onenterargs then 
+							rowdata.onenter(unpack(celldata.onenterargs));
+						elseif rowdata.onenter then 
+							rowdata.onenter(row, ...);
+						end
+					end
+				end);
+				col:SetScript("OnLeave", function(cellFrame, ...)
+					SetHighLightColor(row, { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 });
+					local realindex = table.filtered[i+table.offset];
+					local celldata = table.data[realindex].cols[j];
+					if celldata.onenter and celldata.onenterargs then 
+						celldata.onenter(unpack(celldata.onenterargs));
+						return;
+					elseif celldata.onenter then 
+						celldata.onenter(cellFrame, ...);
+						return;
+					else
+						local rowdata = table.data[realindex];
+						if rowdata.onleave and rowdata.onleaveargs then 
+							rowdata.onleave(unpack(celldata.onleaveargs));
+						elseif rowdata.onleave then 
+							rowdata.onleave(row, ...);
+						end
+					end
+				end);
+
 				if j > 1 then 
-					col:SetPoint("LEFT", row.cols[j-1], "RIGHT", 2 * lrpadding, 0);
+					col:SetPoint("LEFT", row.cols[j-1], "RIGHT", 0, 0);
 				else
-					col:SetPoint("LEFT", row, "LEFT", 2 + lrpadding, 0);
+					col:SetPoint("LEFT", row, "LEFT", 2, 0);
 				end
 				col:SetHeight(rowHeight);
-				col:SetWidth(self.cols[j].width - (2 * lrpadding));
+				col:SetWidth(self.cols[j].width);
+				col.text:SetPoint("TOP", col, "TOP", 0, 0);
+				col.text:SetPoint("BOTTOM", col, "BOTTOM", 0, 0);
+				col.text:SetWidth(self.cols[j].width - 2*lrpadding);
 			end
 			j = #self.cols + 1;
 			col = row.cols[j];
@@ -430,7 +460,7 @@ do
 				local row = i + o;	
 				if st.rows then
 					for col = 1, #st.cols do
-						local celldisplay = st.rows[i].cols[col];
+						local celldisplay = st.rows[i].cols[col].text;
 						if st.data[st.filtered[row]] then
 							st.rows[i]:Show();
 							local celldata = st.data[st.filtered[row]].cols[col];
