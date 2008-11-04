@@ -19,8 +19,14 @@ function ScrollingTable:ChatCommand()
 				data[row].cols[col] = { ["value"] = math.random(50) };
 				-- data[row].cols[col].color    (cell text color)
 			end
-			data[row].onclick = function ()
-				ScrollingTable:Print("First Column:",data[row].cols[1].value);
+			data[row].onclick = function(self, event, ...)
+				ScrollingTable:Print(data[row].cols[1].value);
+			end
+			data[row].onenter = function(...)
+				ScrollingTable:Print(...);
+			end
+			data[row].onleave = function(...)
+				ScrollingTable:Print(...);
 			end
 			-- data[row].color (row text color)
 		end 
@@ -95,36 +101,48 @@ do
 			if not row then 
 				row = CreateFrame("Button", self.frame:GetName().."Row"..i, self.frame);
 				row:EnableMouse(true);
-				row:SetScript("OnClick", function(self, button, down)
-					 local x, y = GetCursorPosition();
-					 x = x / self:GetEffectiveScale();
-					 local realindex = table.filtered[i+table.offset];
-					 for j = 1, #self.cols do
-						local col = self.cols[j];
+				row:SetScript("OnClick", function(rowFrame, ...)
+					local realindex = table.filtered[i+table.offset];
+					local x, y = GetCursorPosition();
+					x = x / rowFrame:GetEffectiveScale();
+					for j, col in ipairs(row.cols) do
 						if x >= col:GetLeft() and x <= col:GetRight() then 
-							local cellclick = table.data[realindex].cols[j].onclick;
-							if cellclick and type(cellclick) == "function" then 
-								cellclick(unpack(table.data[realindex].cols[j].onclickargs or {}));
+							local celldata = table.data[realindex].cols[j];
+							if celldata.onclick and celldata.onclickargs then 
+								celldata.onclick(unpack(celldata.onclickargs));
 								return;
-							end
-							local cellmouseover = table.data[realindex].cols[j].onmouseover;
-							if cellmouseover and type(cellmouseover) == "function" then 
-								cellmouseover(unpack(table.data[realindex].cols[j].onmouseoverargs or {}));
+							elseif celldata.onclick then 
+								celldata.onclick(rowFrame, ...);
 								return;
 							end
 						end
 					end
-				 	-- column not found...
-					local rowclick = table.data[realindex].onclick;
-					if rowclick and type(rowclick) == "function" then 
-						rowclick(unpack(table.data[i].onclickargs or {}));
-					end
-					local rowmouseover = table.data[realindex].onmouseover;
-					if rowmouseover and type(rowmouseover) == "function" then 
-						rowmouseover(unpack(table.data[i].onmouseoverargs or {}));
+				 	-- cell handler not found...
+					local rowdata = table.data[realindex];
+					if rowdata.onclick and rowdata.onclickargs then 
+						rowdata.onclick(unpack(celldata.onclickargs));
+					elseif rowdata.onclick then 
+						rowdata.onclick(rowFrame, ...);
 					end
 				end);
-				
+				row:SetScript("OnEnter", function(rowFrame, ...)
+					local realindex = table.filtered[i+table.offset];
+					local rowdata = table.data[realindex];
+					if rowdata.onenter and rowdata.onenterargs then 
+						rowdata.onenter(unpack(celldata.onenterargs));
+					elseif rowdata.onenter then 
+						rowdata.onenter(rowFrame, ...);
+					end
+				end);
+				row:SetScript("OnLeave", function(rowFrame, ...)
+					local realindex = table.filtered[i+table.offset];
+					local rowdata = table.data[realindex];
+					if rowdata.onleave and rowdata.onleaveargs then 
+						rowdata.onleave(unpack(celldata.onleaveargs));
+					elseif rowdata.onleave then 
+						rowdata.onleave(rowFrame, ...);
+					end
+				end);
 				SetHighLightColor(row, self.highlight);
 				
 				self.rows[i] = row;
@@ -148,7 +166,7 @@ do
 					row.cols[j] = col;
 					local align = self.cols[j].align or "LEFT";
 					col:SetJustifyH(align); 
-				end	
+				end
 				if j > 1 then 
 					col:SetPoint("LEFT", row.cols[j-1], "RIGHT", 2 * lrpadding, 0);
 				else
