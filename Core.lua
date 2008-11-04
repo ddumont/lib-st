@@ -96,6 +96,21 @@ do
 		frame.background:SetTexture(color.r, color.g, color.b, color.a);
 	end
 	
+	local FireHandlerWithArgs = function (handler, data, ...)
+		-- returns false if no handler was found
+		local ret = false;
+		local fnHandler = data[handler];
+		local args = data[handler.."args"];
+		if fnHandler then 
+			if args then 
+				fnHandler(unpack(args));
+			else 
+				fnHandler(...);
+			end
+			ret = true;
+		end
+		return ret;
+	end
 	local SetDisplayRows = function(self, num, rowHeight)
 		local table = self;  -- save for closure later
 		
@@ -140,58 +155,22 @@ do
 				col:SetScript("OnClick", function(cellFrame, ...)
 					local realindex = table.filtered[i+table.offset];
 					local celldata = table.data[realindex].cols[j];
-					if celldata.onclick and celldata.onclickargs then 
-						celldata.onclick(unpack(celldata.onclickargs));
-						return;
-					elseif celldata.onclick then 
-						celldata.onclick(cellFrame, ...);
-						return;
-					else
+					if not FireHandlerWithArgs("onclick", celldata, cellFrame, ...) then 
 						local rowdata = table.data[realindex];
-						if rowdata.onclick and rowdata.onclickargs then 
-							rowdata.onclick(unpack(celldata.onclickargs));
-						elseif rowdata.onclick then 
-							rowdata.onclick(row, ...);
-						end
+						FireHandlerWithArgs("onclick", rowdata, row, ...)			
 					end
 				end);
 				col:SetScript("OnEnter", function(cellFrame, ...)
 					SetHighLightColor(row, defaulthighlight);
 					local realindex = table.filtered[i+table.offset];
 					local celldata = table.data[realindex].cols[j];
-					if celldata.onenter and celldata.onenterargs then 
-						celldata.onenter(unpack(celldata.onenterargs));
-						return;
-					elseif celldata.onenter then 
-						celldata.onenter(cellFrame, ...);
-						return;
-					else
-						local rowdata = table.data[realindex];
-						if rowdata.onenter and rowdata.onenterargs then 
-							rowdata.onenter(unpack(celldata.onenterargs));
-						elseif rowdata.onenter then 
-							rowdata.onenter(row, ...);
-						end
-					end
+					FireHandlerWithArgs("onenter", celldata, cellFrame, ...);
 				end);
 				col:SetScript("OnLeave", function(cellFrame, ...)
 					SetHighLightColor(row, { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 });
 					local realindex = table.filtered[i+table.offset];
 					local celldata = table.data[realindex].cols[j];
-					if celldata.onenter and celldata.onenterargs then 
-						celldata.onenter(unpack(celldata.onenterargs));
-						return;
-					elseif celldata.onenter then 
-						celldata.onenter(cellFrame, ...);
-						return;
-					else
-						local rowdata = table.data[realindex];
-						if rowdata.onleave and rowdata.onleaveargs then 
-							rowdata.onleave(unpack(celldata.onleaveargs));
-						elseif rowdata.onleave then 
-							rowdata.onleave(row, ...);
-						end
-					end
+					FireHandlerWithArgs("onleave", celldata, cellFrame, ...);
 				end);
 
 				if j > 1 then 
