@@ -107,12 +107,21 @@ do
 								cellclick(unpack(table.data[realindex].cols[j].onclickargs or {}));
 								return;
 							end
+							local cellmouseover = table.data[realindex].cols[j].onmouseover;
+							if cellmouseover and type(cellmouseover) == "function" then 
+								cellmouseover(unpack(table.data[realindex].cols[j].cellmouseoverargs or {}));
+								return;
+							end
 						end
 					end
 				 	-- column not found...
 					local rowclick = table.data[realindex].onclick;
 					if rowclick and type(rowclick) == "function" then 
 						rowclick(unpack(table.data[i].onclickargs or {}));
+					end
+					local rowmouseover = table.data[realindex].onmouseover;
+					if rowmouseover and type(rowmouseover) == "function" then 
+						rowmouseover(unpack(table.data[i].cellmouseoverargs or {}));
 					end
 				end);
 				
