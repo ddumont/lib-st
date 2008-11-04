@@ -109,7 +109,7 @@ do
 							end
 							local cellmouseover = table.data[realindex].cols[j].onmouseover;
 							if cellmouseover and type(cellmouseover) == "function" then 
-								cellmouseover(unpack(table.data[realindex].cols[j].cellmouseoverargs or {}));
+								cellmouseover(unpack(table.data[realindex].cols[j].mouseoverargs or {}));
 								return;
 							end
 						end
