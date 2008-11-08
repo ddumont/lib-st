@@ -461,7 +461,7 @@ do
 								colorargs = celldata.colorargs;
 							end	
 							if type(color) == "function" then 
-								color = color(unpack(colorargs or {}));
+								color = color(unpack(colorargs or {st.rows[i].cols[col]}));
 							end
 							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);						
 						else
