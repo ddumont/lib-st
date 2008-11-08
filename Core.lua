@@ -70,7 +70,7 @@ do
 		for num, col in pairs(self.cols) do
 			width = width + col.width;
 		end
-		self.frame:SetWidth(width);
+		self.frame:SetWidth(width+20);
 		self:Refresh();
 	end
 	
@@ -424,15 +424,30 @@ do
 		f:SetBackdropColor(0.1,0.1,0.1);
 		f:SetPoint("CENTER",UIParent,"CENTER",0,0);
 		
-		-- build scroll frame
-		local scrollframe = CreateFrame("ScrollFrame", f:GetName().."ScrollFramexcvb", f, "FauxScrollFrameTemplate");
+		-- build scroll frame		
+		local scrollframe = CreateFrame("ScrollFrame", f:GetName().."ScrollFrame", f, "FauxScrollFrameTemplate");
 		st.scrollframe = scrollframe;
 		scrollframe:Show();
 		scrollframe:SetScript("OnHide", function(self, ...)
 			self:Show();
 		end);
-		scrollframe:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0);
-		scrollframe:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, 0);
+		scrollframe:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -4);
+		scrollframe:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -26, 3);
+		
+		local scrolltrough = CreateFrame("Frame", f:GetName().."ScrollTrough", scrollframe);
+		scrolltrough:SetWidth(17);
+		scrolltrough:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -3);
+		scrolltrough:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -4, 4);
+		scrolltrough.background = scrolltrough:CreateTexture(nil, "BACKGROUND");
+		scrolltrough.background:SetAllPoints(scrolltrough);
+		scrolltrough.background:SetTexture(0.05, 0.05, 0.05, 1.0);
+		local scrolltroughborder = CreateFrame("Frame", f:GetName().."ScrollTroughBorder", scrollframe);
+		scrolltroughborder:SetWidth(1);
+		scrolltroughborder:SetPoint("TOPRIGHT", scrolltrough, "TOPLEFT");
+		scrolltroughborder:SetPoint("BOTTOMRIGHT", scrolltrough, "BOTTOMLEFT");
+		scrolltroughborder.background = scrolltrough:CreateTexture(nil, "BACKGROUND");
+		scrolltroughborder.background:SetAllPoints(scrolltroughborder);
+		scrolltroughborder.background:SetTexture(0.5, 0.5, 0.5, 1.0);
 		
 		st.Refresh = function(self)	
 			FauxScrollFrame_Update(scrollframe, #st.filtered, st.displayRows, st.rowHeight);
