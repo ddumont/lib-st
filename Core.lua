@@ -163,8 +163,12 @@ do
 				col:SetScript("OnLeave", function(cellFrame, ...)
 					SetHighLightColor(row, { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 });
 					local realindex = table.filtered[i+table.offset];
-					local celldata = table.data[realindex].cols[j];
-					FireHandlerWithArgs("onleave", celldata, cellFrame, ...);
+					-- when table data is set to an empty table, if your mouse is on a row, it will leave...  
+					--  and table data will be empty, so handle the nil...
+					if table.data[realindex] then
+						local celldata = table.data[realindex].cols[j];
+						FireHandlerWithArgs("onleave", celldata, cellFrame, ...);
+					end
 				end);
 
 				if j > 1 then 
