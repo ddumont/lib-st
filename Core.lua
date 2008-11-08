@@ -268,6 +268,7 @@ do
 	
 	local Show = function(self)
 		self.frame:Show();
+		self.scrollframe:Show();
 		self.showing = true;
 	end
 	local Hide = function(self)
@@ -424,7 +425,12 @@ do
 		f:SetPoint("CENTER",UIParent,"CENTER",0,0);
 		
 		-- build scroll frame
-		local scrollframe = CreateFrame("ScrollFrame", f:GetName().."ScrollFrame", f, "FauxScrollFrameTemplate");
+		local scrollframe = CreateFrame("ScrollFrame", f:GetName().."ScrollFramexcvb", f, "FauxScrollFrameTemplate");
+		st.scrollframe = scrollframe;
+		scrollframe:Show();
+		scrollframe:SetScript("OnHide", function(self, ...)
+			self:Show();
+		end);
 		scrollframe:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0);
 		scrollframe:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -3, 0);
 		
