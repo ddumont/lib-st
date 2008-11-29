@@ -302,7 +302,13 @@ do
 		end
 		if sortby then 
 			table.sort(self.sorttable, function(a,b)
-				return self:CompareSort(a, b, sortby);
+				local cella, cellb = self.data[a].cols[sortby], self.data[b].cols[sortby];
+				local column = self.cols[sortby];
+				if column.comparesort then 
+					return column.comparesort(cella, cellb, column);
+				else
+					return self:CompareSort(cella, cellb, column);
+				end
 			end);
 		end
 		self.filtered = self:DoFilter();
@@ -317,14 +323,13 @@ do
 		end
 	end
 	
-	local CompareSort = function (self, a, b, sortby)
-		local cola, colb = self.data[a].cols[sortby], self.data[b].cols[sortby];
-		local a1, b1 = cola.value, colb.value;
+	local CompareSort = function (self, cella, cellb, column)
+		local a1, b1 = cella.value, cellb.value;
 		if type(a1) == "function" then 
-			a1 = a1(unpack(cola.args or {}));
+			a1 = a1(unpack(cella.args or {}));
 		end
 		if type(b1) == "function" then 
-			b1 = b1(unpack(colb.args or {}));
+			b1 = b1(unpack(cellb.args or {}));
 		end
 		
 		if type(a1) ~= type(b1) then
@@ -344,10 +349,14 @@ do
 			end
 		end
 		
-		if a1 == b1 and self.cols[sortby].sortnext then 
-			return self:CompareSort(a, b, self.cols[sortby].sortnext);
+		if a1 == b1 and column.sortnext then 
+			if column.comparesort then 
+				return column.comparesort(cella, cellb, self.cols[column.sortnext]);
+			else
+				return self:CompareSort(cella, cellb, self.cols[column.sortnext]);
+			end
 		else
-			local direction = self.cols[sortby].sort or self.cols[sortby].defaultsort or "asc";
+			local direction = column.sort or column.defaultsort or "asc";
 			if direction:lower() == "asc" then 		
 				return a1 > b1;
 			else
