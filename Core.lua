@@ -134,10 +134,6 @@ do
 			end
 			for j = 1, #self.cols do
 				local col = row.cols[j];
-				if not row.moo then 
-					row.moo = {};
-				end
-				local moo = row.moo[j];
 				if not col then 
 					col = CreateFrame("Button", row:GetName().."col"..j, row);
 					col.text = row:CreateFontString(col:GetName().."text", "OVERLAY", "GameFontHighlightSmall");
