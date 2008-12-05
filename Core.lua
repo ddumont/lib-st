@@ -19,18 +19,6 @@ function ScrollingTable:ChatCommand()
 				data[row].cols[col] = { ["value"] = math.random(50) };
 				-- data[row].cols[col].color    (cell text color)
 			end
-			data[row].cols[1].onclick = function(self, event, ...)
-				ScrollingTable:Print("click! row", row, "col 1 value", data[row].cols[1].value);
-			end
-			data[row].cols[2].onenter = function(...)
-				ScrollingTable:Print("enter! row", row, "col 2 value", data[row].cols[2].value);
-			end
-			data[row].cols[2].onleave = function(...)
-				ScrollingTable:Print("leave! row", row, "col 2 value", data[row].cols[2].value);
-			end
-			data[row].onclick = function(self, event, ...)
-				ScrollingTable:Print("click! row", row);
-			end
 			-- data[row].color (row text color)
 		end 
 		data[5].cols[1].color = { ["r"] = 0.5, ["g"] = 1.0, ["b"] = 0.5, ["a"] = 1.0 };
@@ -39,6 +27,35 @@ function ScrollingTable:ChatCommand()
 		self.st:SetFilter(function(self, row)
 			return row.cols[1].value > 10; 
 		end);
+		
+		local OldOnEnter = self.st.events.OnEnter;
+		local OldOnLeave = self.st.events.OnLeave;
+		self.st:RegisterEvents({
+			["OnEnter"] = function (rowFrame, cellFrame, data, row, realrow, column, ...)
+				OldOnEnter(rowFrame, cellFrame, data, row, realrow, column, ...);
+				if column == 2 then
+					local value = data[realrow].cols[column].value;
+					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
+				end
+			end,
+			["OnLeave"] = function (rowFrame, cellFrame, data, row, realrow, column, ...)
+				OldOnLeave(rowFrame, cellFrame, data, row, realrow, column, ...);
+				if column == 2 then
+					local value = data[realrow].cols[column].value;
+					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
+				end
+			end,
+			["OnClick"] = function (rowFrame, cellFrame, data, row, realrow, column, ...)
+				if column == 1 then 
+					local value = data[realrow].cols[column].value;
+					ScrollingTable:Print("click! row", realrow, "col 1 value", value);
+				else
+					ScrollingTable:Print("click! row", realrow);
+				end
+			end,
+		});
+		
+		
 	elseif self.st.showing then 
 		self.st:Hide();
 	else
@@ -90,24 +107,31 @@ do
 		frame.background:SetTexture(color.r, color.g, color.b, color.a);
 	end
 	
-	local FireHandlerWithArgs = function (handler, data, ...)
-		-- returns false if no handler was found
-		local ret = false;
-		local fnHandler = data[handler];
-		local args = data[handler.."args"];
-		if fnHandler then 
-			if args then 
-				fnHandler(unpack(args));
-			else 
-				fnHandler(...);
-			end
-			ret = true;
-		end
-		return ret;
-	end
-	local SetDisplayRows = function(self, num, rowHeight)
-		local table = self;  -- save for closure later
+	local RegisterEvents = function(self, events, fRemoveOldEvents) 
+		local table = self; -- save for closure later
 		
+		for i, row in ipairs(self.rows) do 
+			for j, col in ipairs(row.cols) do
+				-- unregister old events.
+				if fRemoveOldEvents and self.events then 
+					for event, handler in pairs(self.events) do 
+						col:SetScript(event, nil);
+					end
+				end
+				
+				-- register new ones.
+				for event, handler in pairs(events) do 
+					col:SetScript(event, function(cellFrame, ...)
+						local realindex = table.filtered[i+table.offset];
+						handler(row, cellFrame, table.data, i, realindex, j, ...);
+					end);
+				end
+			end
+		end
+		self.events = events;
+	end
+	
+	local SetDisplayRows = function(self, num, rowHeight)
 		-- should always set columns first
 		self.displayRows = num;
 		self.rowHeight = rowHeight;
@@ -142,31 +166,8 @@ do
 					col.text:SetJustifyH(align); 
 				end
 				col:EnableMouse(true);
-				col:SetScript("OnClick", function(cellFrame, ...)
-					local realindex = table.filtered[i+table.offset];
-					local celldata = table.data[realindex].cols[j];
-					if not FireHandlerWithArgs("onclick", celldata, cellFrame, ...) then 
-						local rowdata = table.data[realindex];
-						FireHandlerWithArgs("onclick", rowdata, row, ...)			
-					end
-				end);
-				col:SetScript("OnEnter", function(cellFrame, ...)
-					SetHighLightColor(row, table.highlight);
-					local realindex = table.filtered[i+table.offset];
-					local celldata = table.data[realindex].cols[j];
-					FireHandlerWithArgs("onenter", celldata, cellFrame, ...);
-				end);
-				col:SetScript("OnLeave", function(cellFrame, ...)
-					SetHighLightColor(row, { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 });
-					local realindex = table.filtered[i+table.offset];
-					-- when table data is set to an empty table, if your mouse is on a row, it will leave...  
-					--  and table data will be empty, so handle the nil...
-					if table.data[realindex] then
-						local celldata = table.data[realindex].cols[j];
-						FireHandlerWithArgs("onleave", celldata, cellFrame, ...);
-					end
-				end);
-
+				col:RegisterForClicks("AnyUp");
+				
 				if j > 1 then 
 					col:SetPoint("LEFT", row.cols[j-1], "RIGHT", 0, 0);
 				else
@@ -397,6 +398,7 @@ do
 		st.SetData = SetData;
 		st.SortData = SortData;
 		st.CompareSort = CompareSort;
+		st.RegisterEvents = RegisterEvents;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -510,6 +512,15 @@ do
 		st:SetFilter(Filter);
 		st:SetDisplayCols(st.cols);
 		st:SetDisplayRows(st.displayRows, st.rowHeight);
+				st:RegisterEvents({
+			["OnEnter"] = function (rowFrame, ...)
+				SetHighLightColor(rowFrame, st.highlight);
+			end, 
+			["OnLeave"] = function(rowFrame, ...)
+				SetHighLightColor(rowFrame, { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 });
+			end,
+		});
+		
 		return st;
 	end
 end
