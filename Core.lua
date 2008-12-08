@@ -64,6 +64,7 @@ end
 do 
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
 	local defaulthighlight = { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 };
+	local defaulthighlightblank = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 };
 	local lrpadding = 2.5;
 	
 	local ScrollPaneBackdrop  = {
@@ -535,7 +536,7 @@ do
 				SetHighLightColor(rowFrame, st.highlight);
 			end, 
 			["OnLeave"] = function(rowFrame, ...)
-				SetHighLightColor(rowFrame, { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 });
+				SetHighLightColor(rowFrame, defaulthighlightblank);
 			end,
 		});
 		
