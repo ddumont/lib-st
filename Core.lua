@@ -186,10 +186,11 @@ do
 			end
 		end
 		
-		i = num + 1;
-		row = self.rows[i];
+		row = self.rows[num + 1];
 		while row do
 			row:Hide();
+			i = i + 1;
+			row = self.rows[i];
 		end
 		
 		self:SetHeight();
