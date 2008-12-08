@@ -507,9 +507,12 @@ do
 						local fnDoCellUpdate = DoCellUpdate;
 						if st.data[st.filtered[row]] then
 							st.rows[i]:Show();
-							local cellData = st.data[st.filtered[row]].cols[col];
+							local rowData = st.data[st.filtered[row]];
+							local cellData = rowData.cols[col];
 							if cellData.DoCellUpdate then 
 								fnDoCellUpdate = cellData.DoCellUpdate;
+							elseif rowData.DoCellUpdate then
+								fnDoCellUpdate = rowData.DoCellUpdate;
 							end
 						else
 							st.rows[i]:Hide();
