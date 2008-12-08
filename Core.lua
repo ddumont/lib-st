@@ -54,8 +54,6 @@ function ScrollingTable:ChatCommand()
 				end
 			end,
 		});
-		
-		
 	elseif self.st.showing then 
 		self.st:Hide();
 	else
