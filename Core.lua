@@ -511,6 +511,8 @@ do
 							local cellData = rowData.cols[col];
 							if cellData.DoCellUpdate then 
 								fnDoCellUpdate = cellData.DoCellUpdate;
+							elseif st.cols[col].DoCellUpdate then 
+								fnDoCellUpdate = st.cols[col].DoCellUpdate;
 							elseif rowData.DoCellUpdate then
 								fnDoCellUpdate = rowData.DoCellUpdate;
 							end
