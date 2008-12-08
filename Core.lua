@@ -31,21 +31,21 @@ function ScrollingTable:ChatCommand()
 		local OldOnEnter = self.st.events.OnEnter;
 		local OldOnLeave = self.st.events.OnLeave;
 		self.st:RegisterEvents({
-			["OnEnter"] = function (rowFrame, cellFrame, data, row, realrow, column, ...)
-				OldOnEnter(rowFrame, cellFrame, data, row, realrow, column, ...);
+			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				OldOnEnter(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
 				if column == 2 then
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
 				end
 			end,
-			["OnLeave"] = function (rowFrame, cellFrame, data, row, realrow, column, ...)
-				OldOnLeave(rowFrame, cellFrame, data, row, realrow, column, ...);
+			["OnLeave"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				OldOnLeave(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
 				if column == 2 then
 					local value = data[realrow].cols[column].value;
-					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
+					ScrollingTable:Print("leave! row", realrow, "col 2 value", value);
 				end
 			end,
-			["OnClick"] = function (rowFrame, cellFrame, data, row, realrow, column, ...)
+			["OnClick"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				if column == 1 then 
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("click! row", realrow, "col 1 value", value);
@@ -123,7 +123,7 @@ do
 				for event, handler in pairs(events) do 
 					col:SetScript(event, function(cellFrame, ...)
 						local realindex = table.filtered[i+table.offset];
-						handler(row, cellFrame, table.data, i, realindex, j, ...);
+						handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
 					end);
 				end
 			end
@@ -381,6 +381,42 @@ do
 		return result;
 	end
 	
+	local DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, ...)
+		if fShow then
+			local cellData = data[realrow].cols[column];
+			
+			if type(cellData.value) == "function" then 
+				cellFrame.text:SetText(cellData.value(unpack(cellData.args or {})) );
+			else
+				cellFrame.text:SetText(cellData.value);
+			end
+			
+			local color = cellData.color;
+			local colorargs = nil;
+			if not color then 
+			 	color = cols[column].color;
+			 	if not color then 
+			 		color = data[realrow].color;
+			 		if not color then 
+			 			color = defaultcolor;
+			 		else
+			 			colorargs = data[realrow].colorargs;
+			 		end
+			 	else
+			 		colorargs = cols[column].colorargs;
+			 	end
+			else
+				colorargs = cellData.colorargs;
+			end	
+			if type(color) == "function" then 
+				color = color(unpack(colorargs or {cellFrame}));
+			end
+			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
+		else
+			cellFrame.text:SetText("");
+		end
+	end
+	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
 		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
@@ -465,41 +501,21 @@ do
 				local row = i + o;	
 				if st.rows then
 					for col = 1, #st.cols do
-						local celldisplay = st.rows[i].cols[col].text;
+						local rowFrame = st.rows[i];
+						local cellFrame = rowFrame.cols[col];
+						local fShow = true;
+						local fnDoCellUpdate = DoCellUpdate;
 						if st.data[st.filtered[row]] then
 							st.rows[i]:Show();
-							local celldata = st.data[st.filtered[row]].cols[col];
-							if type(celldata.value) == "function" then 
-								celldisplay:SetText(celldata.value(unpack(celldata.args or {})) );
-							else
-								celldisplay:SetText(celldata.value);
+							local cellData = st.data[st.filtered[row]].cols[col];
+							if cellData.DoCellUpdate then 
+								fnDoCellUpdate = cellData.DoCellUpdate;
 							end
-							
-							local color = celldata.color;
-							local colorargs = nil;
-							if not color then 
-							 	color = st.cols[col].color;
-							 	if not color then 
-							 		color = st.data[st.filtered[row]].color
-							 		if not color then 
-							 			color = defaultcolor;
-							 		else
-							 			colorargs = st.data[st.filtered[row]].colorargs;
-							 		end
-							 	else
-							 		colorargs = st.cols[col].colorargs;
-							 	end
-							else
-								colorargs = celldata.colorargs;
-							end	
-							if type(color) == "function" then 
-								color = color(unpack(colorargs or {st.rows[i].cols[col]}));
-							end
-							celldisplay:SetTextColor(color.r, color.g, color.b, color.a);						
 						else
 							st.rows[i]:Hide();
-							celldisplay:SetText("");
+							fShow = false;
 						end
+						fnDoCellUpdate(rowFrame, cellFrame, st.data, st.cols, row, st.filtered[row], col, fShow);
 					end
 				end
 			end
