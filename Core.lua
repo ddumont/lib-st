@@ -187,11 +187,8 @@ do
 			end
 		end
 		
-		row = self.rows[num + 1];
-		while row do
-			row:Hide();
-			i = i + 1;
-			row = self.rows[i];
+		for i = num + 1, #self.rows do
+			self.rows[i]:Hide();
 		end
 		
 		self:SetHeight();
