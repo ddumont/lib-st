@@ -201,13 +201,18 @@ do
 		local table = self; -- reference saved for closure
 		self.cols = cols;
 		
-		local row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
-		row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 4, 0);
-		row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", -4, 0);
-		row:SetHeight(self.rowHeight);
-		row.cols = {};
+		local rowFrameName = self.frame:GetName().."Head";
+		local row = getglobal(rowFrameName);
+		if not row then 
+			row = CreateFrame("Frame", rowFrameName, self.frame);
+			row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 4, 0);
+			row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", -4, 0);
+			row:SetHeight(self.rowHeight);
+			row.cols = {};
+		end
 		for i = 1, #cols do 
-			col = CreateFrame("Button", row:GetName().."Col"..i, row);			
+			local colFrameName =  row:GetName().."Col"..i;
+			local col = getglobal(colFrameName) or CreateFrame("Button", colFrameName, row);			
 			col:SetScript("OnClick", function (self)
 				for j = 1, #table.cols do 
 					if j ~= i then -- clear out all other sort marks
@@ -223,9 +228,9 @@ do
 				table.cols[i].sort = sortorder;
 				table:SortData();
 			end);
-			
 			row.cols[i] = col;
-			local fs = col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
+
+			local fs = col:GetFontString() or col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
 			fs:SetAllPoints(col);
 			fs:SetPoint("LEFT", col, "LEFT", lrpadding, 0);
 			fs:SetPoint("RIGHT", col, "RIGHT", -lrpadding, 0);
