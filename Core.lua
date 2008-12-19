@@ -163,10 +163,17 @@ do
 					row.cols[j] = col;
 					local align = self.cols[j].align or "LEFT";
 					col.text:SetJustifyH(align); 
+					col:EnableMouse(true);
+					col:RegisterForClicks("AnyUp");
+					
+					for event, handler in pairs(self.events) do 
+						col:SetScript(event, function(cellFrame, ...)
+						local realindex = table.filtered[i+table.offset];
+						handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
+					end);
 				end
-				col:EnableMouse(true);
-				col:RegisterForClicks("AnyUp");
-				
+				end
+								
 				if j > 1 then 
 					col:SetPoint("LEFT", row.cols[j-1], "RIGHT", 0, 0);
 				else
