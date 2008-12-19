@@ -168,10 +168,10 @@ do
 					
 					for event, handler in pairs(self.events) do 
 						col:SetScript(event, function(cellFrame, ...)
-						local realindex = table.filtered[i+table.offset];
-						handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
-					end);
-				end
+							local realindex = table.filtered[i+table.offset];
+							handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
+						end);
+					end
 				end
 								
 				if j > 1 then 
