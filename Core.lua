@@ -30,26 +30,28 @@ function ScrollingTable:ChatCommand()
 		
 		local OldOnEnter = self.st.events.OnEnter;
 		local OldOnLeave = self.st.events.OnLeave;
+		local OldOnClick = self.st.events.OnClick;
 		self.st:RegisterEvents({
 			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				OldOnEnter(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
-				if column == 2 then
+				if row and realrow and column == 2 then
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
 				end
 			end,
 			["OnLeave"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				OldOnLeave(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
-				if column == 2 then
+				if row and realrow and column == 2 then
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("leave! row", realrow, "col 2 value", value);
 				end
 			end,
 			["OnClick"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if column == 1 then 
+				OldOnClick(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
+				if row and realrow and column == 1 then 
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("click! row", realrow, "col 1 value", value);
-				else
+				elseif row and realrow then
 					ScrollingTable:Print("click! row", realrow);
 				end
 			end,
@@ -166,11 +168,13 @@ do
 					col:EnableMouse(true);
 					col:RegisterForClicks("AnyUp");
 					
-					for event, handler in pairs(self.events) do 
-						col:SetScript(event, function(cellFrame, ...)
-							local realindex = table.filtered[i+table.offset];
-							handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
-						end);
+					if self.events then 
+						for event, handler in pairs(self.events) do 
+							col:SetScript(event, function(cellFrame, ...)
+								local realindex = table.filtered[i+table.offset];
+								handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
+							end);
+						end
 					end
 				end
 								
@@ -216,7 +220,18 @@ do
 		end
 		for i = 1, #cols do 
 			local colFrameName =  row:GetName().."Col"..i;
-			local col = getglobal(colFrameName) or CreateFrame("Button", colFrameName, row);			
+			local col = getglobal(colFrameName);
+			if not col then 
+				col = CreateFrame("Button", colFrameName, row);	
+				
+				if self.events then 	
+					for event, handler in pairs(self.events) do 
+						col:SetScript(event, function(cellFrame, ...)
+							handler(row, col, table.data, table.cols, nil, nil, i, ...);
+						end);
+					end
+				end
+			end
 			col:SetScript("OnClick", function (self)
 				for j = 1, #table.cols do 
 					if j ~= i then -- clear out all other sort marks
@@ -543,11 +558,32 @@ do
 		st:SetDisplayCols(st.cols);
 		st:SetDisplayRows(st.displayRows, st.rowHeight);
 				st:RegisterEvents({
-			["OnEnter"] = function (rowFrame, ...)
-				SetHighLightColor(rowFrame, st.highlight);
+			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				if row and realrow then 
+					SetHighLightColor(rowFrame, st.highlight);
+				end
 			end, 
-			["OnLeave"] = function(rowFrame, ...)
-				SetHighLightColor(rowFrame, defaulthighlightblank);
+			["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				if row and realrow then 
+					SetHighLightColor(rowFrame, defaulthighlightblank);
+				end
+			end,
+			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				if not (row or realrow) then
+					for i, col in ipairs(table.cols) do 
+						if i ~= column then -- clear out all other sort marks
+							cols[i].sort = nil;
+						end
+					end
+					local sortorder = "asc";
+					if not cols[column].sort and cols[column].defaultsort then
+						sortorder = cols[column].defaultsort; -- sort by columns default sort first;
+					elseif cols[column].sort and cols[column].sort:lower() == "asc" then 
+						sortorder = "dsc";
+					end
+					cols[column].sort = sortorder;
+					st:SortData();
+				end
 			end,
 		});
 		
