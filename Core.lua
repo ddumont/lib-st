@@ -129,6 +129,22 @@ do
 				end
 			end
 		end
+		
+		for j, col in ipairs(self.head.cols) do
+			-- unregister old events.
+			if fRemoveOldEvents and self.events then 
+				for event, handler in pairs(self.events) do 
+					col:SetScript(event, nil);
+				end
+			end
+			
+			-- register new ones.
+			for event, handler in pairs(events) do 
+				col:SetScript(event, function(cellFrame, ...)
+					handler(self.head, cellFrame, table.data, table.cols, nil, nil, j, ...);
+				end);
+			end
+		end
 		self.events = events;
 	end
 	
@@ -209,14 +225,14 @@ do
 		local table = self; -- reference saved for closure
 		self.cols = cols;
 		
-		local rowFrameName = self.frame:GetName().."Head";
-		local row = getglobal(rowFrameName);
+		local row = self.head
 		if not row then 
-			row = CreateFrame("Frame", rowFrameName, self.frame);
+			row = CreateFrame("Frame", self.frame:GetName().."Head", self.frame);
 			row:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 4, 0);
 			row:SetPoint("BOTTOMRIGHT", self.frame, "TOPRIGHT", -4, 0);
 			row:SetHeight(self.rowHeight);
 			row.cols = {};
+			self.head = row;
 		end
 		for i = 1, #cols do 
 			local colFrameName =  row:GetName().."Col"..i;
@@ -227,26 +243,11 @@ do
 				if self.events then 	
 					for event, handler in pairs(self.events) do 
 						col:SetScript(event, function(cellFrame, ...)
-							handler(row, col, table.data, table.cols, nil, nil, i, ...);
+							handler(row, cellFrame, table.data, table.cols, nil, nil, i, ...);
 						end);
 					end
 				end
 			end
-			col:SetScript("OnClick", function (self)
-				for j = 1, #table.cols do 
-					if j ~= i then -- clear out all other sort marks
-						table.cols[j].sort = nil;
-					end
-				end
-				local sortorder = "asc";
-				if not table.cols[i].sort and table.cols[i].defaultsort then
-					sortorder = table.cols[i].defaultsort; -- sort by columns default sort first;
-				elseif table.cols[i].sort and table.cols[i].sort:lower() == "asc" then 
-					sortorder = "dsc";
-				end
-				table.cols[i].sort = sortorder;
-				table:SortData();
-			end);
 			row.cols[i] = col;
 
 			local fs = col:GetFontString() or col:CreateFontString(col:GetName().."fs", "OVERLAY", "GameFontHighlightSmall");
@@ -570,7 +571,7 @@ do
 			end,
 			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				if not (row or realrow) then
-					for i, col in ipairs(table.cols) do 
+					for i, col in ipairs(st.cols) do 
 						if i ~= column then -- clear out all other sort marks
 							cols[i].sort = nil;
 						end
