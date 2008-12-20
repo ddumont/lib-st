@@ -28,26 +28,20 @@ function ScrollingTable:ChatCommand()
 			return row.cols[1].value > 10; 
 		end);
 		
-		local OldOnEnter = self.st.events.OnEnter;
-		local OldOnLeave = self.st.events.OnLeave;
-		local OldOnClick = self.st.events.OnClick;
 		self.st:RegisterEvents({
 			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				OldOnEnter(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
 				if row and realrow and column == 2 then
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
 				end
 			end,
 			["OnLeave"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				OldOnLeave(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
 				if row and realrow and column == 2 then
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("leave! row", realrow, "col 2 value", value);
 				end
 			end,
 			["OnClick"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				OldOnClick(rowFrame, cellFrame, data, cols, row, realrow, column, ...);
 				if row and realrow and column == 1 then 
 					local value = data[realrow].cols[column].value;
 					ScrollingTable:Print("click! row", realrow, "col 1 value", value);
@@ -108,6 +102,14 @@ do
 		frame.background:SetTexture(color.r, color.g, color.b, color.a);
 	end
 	
+	local FireUserEvent = function (self, frame, event, handler, ...)
+		if not handler( ...) then
+			if self.DefaultEvents[event] then 
+				self.DefaultEvents[event]( ...);
+			end
+		end
+	end
+	
 	local RegisterEvents = function(self, events, fRemoveOldEvents) 
 		local table = self; -- save for closure later
 		
@@ -124,7 +126,7 @@ do
 				for event, handler in pairs(events) do 
 					col:SetScript(event, function(cellFrame, ...)
 						local realindex = table.filtered[i+table.offset];
-						handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
+						table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, ... );
 					end);
 				end
 			end
@@ -141,7 +143,7 @@ do
 			-- register new ones.
 			for event, handler in pairs(events) do 
 				col:SetScript(event, function(cellFrame, ...)
-					handler(self.head, cellFrame, table.data, table.cols, nil, nil, j, ...);
+					table:FireUserEvent(col, event, handler, self.head, cellFrame, table.data, table.cols, nil, nil, j, ...);
 				end);
 			end
 		end
@@ -188,7 +190,7 @@ do
 						for event, handler in pairs(self.events) do 
 							col:SetScript(event, function(cellFrame, ...)
 								local realindex = table.filtered[i+table.offset];
-								handler(row, cellFrame, table.data, table.cols, i, realindex, j, ...);
+								table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, ... );
 							end);
 						end
 					end
@@ -243,7 +245,7 @@ do
 				if self.events then 	
 					for event, handler in pairs(self.events) do 
 						col:SetScript(event, function(cellFrame, ...)
-							handler(row, cellFrame, table.data, table.cols, nil, nil, i, ...);
+							table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, nil, nil, i, ...);
 						end);
 					end
 				end
@@ -437,7 +439,7 @@ do
 				color = color(unpack(colorargs or {cellFrame}));
 			end
 			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
-		else
+		else	
 			cellFrame.text:SetText("");
 		end
 	end
@@ -460,6 +462,7 @@ do
 		st.SortData = SortData;
 		st.CompareSort = CompareSort;
 		st.RegisterEvents = RegisterEvents;
+		st.FireUserEvent = FireUserEvent;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -486,6 +489,38 @@ do
 				["bgcolor"] = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.5 },
 			}, -- [3]
 		};
+		st.DefaultEvents = {
+			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				if row and realrow then 
+					SetHighLightColor(rowFrame, st.highlight);
+				end
+				return true;
+			end, 
+			["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				if row and realrow then 
+					SetHighLightColor(rowFrame, defaulthighlightblank);
+				end
+				return true;
+			end,
+			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+				if not (row or realrow) then
+					for i, col in ipairs(st.cols) do 
+						if i ~= column then -- clear out all other sort marks
+							cols[i].sort = nil;
+						end
+					end
+					local sortorder = "asc";
+					if not cols[column].sort and cols[column].defaultsort then
+						sortorder = cols[column].defaultsort; -- sort by columns default sort first;
+					elseif cols[column].sort and cols[column].sort:lower() == "asc" then 
+						sortorder = "dsc";
+					end
+					cols[column].sort = sortorder;
+					st:SortData();
+				end
+				return true;
+			end,
+		};
 		st.data = {};
 	
 		f:SetBackdrop(ScrollPaneBackdrop);
@@ -499,6 +534,7 @@ do
 		scrollframe:SetScript("OnHide", function(self, ...)
 			self:Show();
 		end);
+		
 		scrollframe:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -4);
 		scrollframe:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -26, 3);
 		
@@ -558,35 +594,7 @@ do
 		st:SetFilter(Filter);
 		st:SetDisplayCols(st.cols);
 		st:SetDisplayRows(st.displayRows, st.rowHeight);
-				st:RegisterEvents({
-			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if row and realrow then 
-					SetHighLightColor(rowFrame, st.highlight);
-				end
-			end, 
-			["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if row and realrow then 
-					SetHighLightColor(rowFrame, defaulthighlightblank);
-				end
-			end,
-			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if not (row or realrow) then
-					for i, col in ipairs(st.cols) do 
-						if i ~= column then -- clear out all other sort marks
-							cols[i].sort = nil;
-						end
-					end
-					local sortorder = "asc";
-					if not cols[column].sort and cols[column].defaultsort then
-						sortorder = cols[column].defaultsort; -- sort by columns default sort first;
-					elseif cols[column].sort and cols[column].sort:lower() == "asc" then 
-						sortorder = "dsc";
-					end
-					cols[column].sort = sortorder;
-					st:SortData();
-				end
-			end,
-		});
+		st:RegisterEvents(st.DefaultEvents);
 		
 		return st;
 	end
