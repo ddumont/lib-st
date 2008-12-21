@@ -373,7 +373,7 @@ do
 			end
 		end
 		
-		if a1 == b1 and column.sortnext then 
+		if a1 == b1 and column.sortnext and (not(self.cols[column.sortnext].sort)) then 
 			local nextcol = self.cols[column.sortnext];
 			if nextcol.comparesort then 
 				return nextcol.comparesort(cella, cellb, nextcol);
