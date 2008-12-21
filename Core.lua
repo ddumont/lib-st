@@ -374,10 +374,11 @@ do
 		end
 		
 		if a1 == b1 and column.sortnext then 
-			if column.comparesort then 
-				return column.comparesort(cella, cellb, self.cols[column.sortnext]);
+			local nextcol = self.cols[column.sortnext];
+			if nextcol.comparesort then 
+				return nextcol.comparesort(cella, cellb, nextcol);
 			else
-				return self:CompareSort(cella, cellb, self.cols[column.sortnext]);
+				return self:CompareSort(cella, cellb, nextcol);
 			end
 		else
 			local direction = column.sort or column.defaultsort or "asc";
