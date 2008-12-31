@@ -325,13 +325,12 @@ do
 			i = i + 1;
 		end
 		if sortby then 
-			table.sort(self.sorttable, function(a,b)
-				local cella, cellb = self.data[a].cols[sortby], self.data[b].cols[sortby];
+			table.sort(self.sorttable, function(rowa, rowb)
 				local column = self.cols[sortby];
 				if column.comparesort then 
-					return column.comparesort(cella, cellb, column);
+					return column.comparesort(self, rowa, rowb, sortby);
 				else
-					return self:CompareSort(cella, cellb, column);
+					return self:CompareSort(rowa, rowb, sortby);
 				end
 			end);
 		end
@@ -347,8 +346,10 @@ do
 		end
 	end
 	
-	local CompareSort = function (self, cella, cellb, column)
+	local CompareSort = function (self, rowa, rowb, sortbycol)
+		local cella, cellb = self.data[rowa].cols[sortbycol], self.data[rowb].cols[sortbycol];
 		local a1, b1 = cella.value, cellb.value;
+		local column = self.cols[sortbycol];
 		if type(a1) == "function" then 
 			a1 = a1(unpack(cella.args or {}));
 		end
@@ -376,9 +377,9 @@ do
 		if a1 == b1 and column.sortnext and (not(self.cols[column.sortnext].sort)) then 
 			local nextcol = self.cols[column.sortnext];
 			if nextcol.comparesort then 
-				return nextcol.comparesort(cella, cellb, nextcol);
+				return nextcol.comparesort(self, rowa, rowb, column.sortnext);
 			else
-				return self:CompareSort(cella, cellb, nextcol);
+				return self:CompareSort(rowa, rowb, column.sortnext);
 			end
 		else
 			local direction = column.sort or column.defaultsort or "asc";
