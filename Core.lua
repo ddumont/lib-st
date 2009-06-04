@@ -1,61 +1,8 @@
-ScrollingTable = LibStub("AceAddon-3.0"):NewAddon("st", "AceConsole-3.0");
-
-function ScrollingTable:OnInitialize()
-    self:RegisterChatCommand("st", "ChatCommand");
-end
-
-function ScrollingTable:ChatCommand()
-	if not self.st then 
-		self.st = self:CreateST();
-		local data = {}
-		for row = 1, 20 do
-			if not data[row] then 
-				data[row] = {};
-			end
-			for col = 1, 3 do
-				if not data[row].cols then 
-					data[row].cols = {};
-				end
-				data[row].cols[col] = { ["value"] = math.random(50) };
-				-- data[row].cols[col].color    (cell text color)
-			end
-			-- data[row].color (row text color)
-		end 
-		data[5].cols[1].color = { ["r"] = 0.5, ["g"] = 1.0, ["b"] = 0.5, ["a"] = 1.0 };
-		data[5].color = { ["r"] = 1.0, ["g"] = 0.5, ["b"] = 0.5, ["a"] = 1.0 };
-		self.st:SetData(data);
-		self.st:SetFilter(function(self, row)
-			return row.cols[1].value > 10; 
-		end);
-		
-		self.st:RegisterEvents({
-			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if row and realrow and column == 2 then
-					local value = data[realrow].cols[column].value;
-					ScrollingTable:Print("enter! row", realrow, "col 2 value", value);
-				end
-			end,
-			["OnLeave"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if row and realrow and column == 2 then
-					local value = data[realrow].cols[column].value;
-					ScrollingTable:Print("leave! row", realrow, "col 2 value", value);
-				end
-			end,
-			["OnClick"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
-				if row and realrow and column == 1 then 
-					local value = data[realrow].cols[column].value;
-					ScrollingTable:Print("click! row", realrow, "col 1 value", value);
-				elseif row and realrow then
-					ScrollingTable:Print("click! row", realrow);
-				end
-			end,
-		});
-	elseif self.st.showing then 
-		self.st:Hide();
-	else
-		self.st:Show();
-	end
-end
+local MAJOR, MINOR = "ScrollingTable", tonumber("@project-version@") or 9999;
+local ScrollingTable, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
+if not ScrollingTable then 
+	return; -- No Upgrade needed. 
+end 
 
 do 
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };

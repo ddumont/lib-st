@@ -6,6 +6,6 @@
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3
 ## X-Category: Interface Enhancements
-embeds.xml
 
-Core.lua
+LibStub\LibStub.lua
+lib-st.xml
