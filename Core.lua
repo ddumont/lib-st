@@ -17,8 +17,6 @@ do
 		insets = { left = 3, right = 3, top = 5, bottom = 3 }
 	};
 	
-	local framecount = 1; 
-	
 	local SetHeight = function(self)
 		self.frame:SetHeight( (self.displayRows * self.rowHeight) + 10);
 		self:Refresh();
@@ -395,8 +393,9 @@ do
 	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
-		local f = CreateFrame("Frame", "ScrollTable"..framecount, parent or UIParent);
-		framecount = framecount + 1;
+		self.framecount = self.framecount or 1; 
+		local f = CreateFrame("Frame", "ScrollTable" .. self.framecount, parent or UIParent);
+		self.framecount = self.framecount + 1;
 		st.showing = true;
 		st.frame = f;
 		
