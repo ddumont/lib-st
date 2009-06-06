@@ -39,18 +39,10 @@ do
 		frame.highlight:SetTexture(color.r, color.g, color.b, color.a);
 	end
 	
-	local SetBackgroundColor = function(frame, color)
-		if not frame.background then 
-			frame.background = frame:CreateTexture(nil, "BACKGROUND");
-			frame.background:SetAllPoints(frame);
-		end
-		frame.background:SetTexture(color.r, color.g, color.b, color.a);
-	end
-	
 	local FireUserEvent = function (self, frame, event, handler, ...)
-		if not handler( ...) then
+		if not handler(self, ...) then
 			if self.DefaultEvents[event] then 
-				self.DefaultEvents[event]( ...);
+				self.DefaultEvents[event](self, ...);
 			end
 		end
 	end
@@ -355,41 +347,85 @@ do
 		return result;
 	end
 	
-	local DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, ...)
+		function GetDefaultHighlightBlank(self)
+		return self.defaulthighlightblank;
+	end
+	
+	function SetDefaultHighlightBlank(self, red, green, blue, alpha)
+		if not self.defaulthighlightblank then 
+			self.defaulthighlightblank = defaulthighlightblank;
+		end
+		
+		if red then self.defaulthighlightblank["r"] = red; end
+		if green then self.defaulthighlightblank["g"] = red; end
+		if blue then self.defaulthighlightblank["b"] = red; end
+		if alpha then self.defaulthighlightblank["a"] = red; end
+	end
+	
+	function GetDefaultHighlight(self)
+		return self.defaulthighlight;
+	end
+	
+	function SetDefaultHighlight(self, red, green, blue, alpha)
+		if not self.defaulthighlight then 
+			self.defaulthighlight = defaulthighlight;
+		end
+		
+		if red then self.defaulthighlight["r"] = red; end
+		if green then self.defaulthighlight["g"] = red; end
+		if blue then self.defaulthighlight["b"] = red; end
+		if alpha then self.defaulthighlight["a"] = red; end
+	end
+	
+	function EnableSelection(self, flag)
+		self.fSelect = flag;
+	end
+	
+	local DoCellUpdate = function(self, rowFrame, cellFrame, data, cols, row, realrow, column, fShow, ...)
 		if fShow then
-			local cellData = data[realrow].cols[column];
+			local rowdata = data[realrow];
+			local celldata = rowdata.cols[column];
 			
-			if type(cellData.value) == "function" then 
-				cellFrame.text:SetText(cellData.value(unpack(cellData.args or {})) );
+			if type(celldata.value) == "function" then 
+				cellFrame.text:SetText(celldata.value(unpack(celldata.args or {})) );
 			else
-				cellFrame.text:SetText(cellData.value);
+				cellFrame.text:SetText(celldata.value);
 			end
 			
-			local color = cellData.color;
+			local color = celldata.color;
 			local colorargs = nil;
 			if not color then 
 			 	color = cols[column].color;
 			 	if not color then 
-			 		color = data[realrow].color;
+			 		color = rowdata.color;
 			 		if not color then 
 			 			color = defaultcolor;
 			 		else
-			 			colorargs = data[realrow].colorargs;
+			 			colorargs = rowdata.colorargs;
 			 		end
 			 	else
 			 		colorargs = cols[column].colorargs;
 			 	end
 			else
-				colorargs = cellData.colorargs;
+				colorargs = celldata.colorargs;
 			end	
 			if type(color) == "function" then 
 				color = color(unpack(colorargs or {cellFrame}));
 			end
 			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
+			
+			if self.fSelect then 
+				if self.selected == realrow then 
+					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or self:GetDefaultHighlight());
+				else
+					SetHighLightColor(rowFrame, self:GetDefaultHighlightBlank());
+				end
+			end
 		else	
 			cellFrame.text:SetText("");
 		end
 	end
+
 	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
@@ -411,11 +447,19 @@ do
 		st.CompareSort = CompareSort;
 		st.RegisterEvents = RegisterEvents;
 		st.FireUserEvent = FireUserEvent;
+		st.SetDefaultHighlightBlank = SetDefaultHighlightBlank;
+		st.SetDefaultHighlight = SetDefaultHighlight;
+		st.GetDefaultHighlightBlank = GetDefaultHighlightBlank;
+		st.GetDefaultHighlight = GetDefaultHighlight;
+		st.EnableSelection = EnableSelection;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
 		
-		st.highlight = highlight or defaulthighlight;
+		highlight = highlight or {};
+		st:SetDefaultHighlight(highlight["r"], highlight["g"], highlight["b"], highlight["a"]); -- highlight color
+		st:SetDefaultHighlightBlank(); -- non highlight color
+				
 		st.displayRows = numRows or 12;
 		st.rowHeight = rowHeight or 15;
 		st.cols = cols or {
@@ -438,19 +482,25 @@ do
 			}, -- [3]
 		};
 		st.DefaultEvents = {
-			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+			["OnEnter"] = function (self, rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				if row and realrow then 
-					SetHighLightColor(rowFrame, st.highlight);
+					local rowdata = data[realrow];
+					local celldata = rowdata.cols[column];
+					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or st:GetDefaultHighlight());
 				end
 				return true;
 			end, 
-			["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+			["OnLeave"] = function(self, rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				if row and realrow then 
-					SetHighLightColor(rowFrame, defaulthighlightblank);
+					local rowdata = data[realrow];
+					local celldata = rowdata.cols[column];
+					if realrow ~= self.selected or not self.fSelect then 
+						SetHighLightColor(rowFrame, st:GetDefaultHighlightBlank());
+					end
 				end
 				return true;
 			end,
-			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+			["OnClick"] = function(self, rowFrame, cellFrame, data, cols, row, realrow, column, ...)
 				if not (row or realrow) then
 					for i, col in ipairs(st.cols) do 
 						if i ~= column then -- clear out all other sort marks
@@ -465,6 +515,13 @@ do
 					end
 					cols[column].sort = sortorder;
 					st:SortData();
+				else
+					if self.selected == realrow then 
+						self.selected = nil;
+					else
+						self.selected = realrow;
+					end
+					self:Refresh();
 				end
 				return true;
 			end,
@@ -529,7 +586,7 @@ do
 							st.rows[i]:Hide();
 							fShow = false;
 						end
-						fnDoCellUpdate(rowFrame, cellFrame, st.data, st.cols, row, st.filtered[row], col, fShow);
+						fnDoCellUpdate(st, rowFrame, cellFrame, st.data, st.cols, row, st.filtered[row], col, fShow);
 					end
 				end
 			end
