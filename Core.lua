@@ -40,9 +40,9 @@ do
 	end
 	
 	local FireUserEvent = function (self, frame, event, handler, ...)
-		if not handler(self, ...) then
+		if not handler( ...) then
 			if self.DefaultEvents[event] then 
-				self.DefaultEvents[event](self, ...);
+				self.DefaultEvents[event]( ...);
 			end
 		end
 	end
@@ -63,7 +63,7 @@ do
 				for event, handler in pairs(events) do 
 					col:SetScript(event, function(cellFrame, ...)
 						local realindex = table.filtered[i+table.offset];
-						table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, ... );
+						table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, table, ... );
 					end);
 				end
 			end
@@ -80,7 +80,7 @@ do
 			-- register new ones.
 			for event, handler in pairs(events) do 
 				col:SetScript(event, function(cellFrame, ...)
-					table:FireUserEvent(col, event, handler, self.head, cellFrame, table.data, table.cols, nil, nil, j, ...);
+					table:FireUserEvent(col, event, handler, self.head, cellFrame, table.data, table.cols, nil, nil, j, table, ...);
 				end);
 			end
 		end
@@ -381,7 +381,7 @@ do
 		self.fSelect = flag;
 	end
 	
-	local DoCellUpdate = function(self, rowFrame, cellFrame, data, cols, row, realrow, column, fShow, ...)
+	local DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
 		if fShow then
 			local rowdata = data[realrow];
 			local celldata = rowdata.cols[column];
@@ -414,11 +414,11 @@ do
 			end
 			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
 			
-			if self.fSelect then 
-				if self.selected == realrow then 
-					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or self:GetDefaultHighlight());
+			if table.fSelect then 
+				if table.selected == realrow then 
+					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				else
-					SetHighLightColor(rowFrame, self:GetDefaultHighlightBlank());
+					SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 				end
 			end
 		else	
@@ -482,25 +482,25 @@ do
 			}, -- [3]
 		};
 		st.DefaultEvents = {
-			["OnEnter"] = function (self, rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
 				if row and realrow then 
 					local rowdata = data[realrow];
 					local celldata = rowdata.cols[column];
-					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or st:GetDefaultHighlight());
+					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				end
 				return true;
 			end, 
-			["OnLeave"] = function(self, rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+			["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
 				if row and realrow then 
 					local rowdata = data[realrow];
 					local celldata = rowdata.cols[column];
-					if realrow ~= self.selected or not self.fSelect then 
-						SetHighLightColor(rowFrame, st:GetDefaultHighlightBlank());
+					if realrow ~= table.selected or not table.fSelect then 
+						SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 					end
 				end
 				return true;
 			end,
-			["OnClick"] = function(self, rowFrame, cellFrame, data, cols, row, realrow, column, ...)
+			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
 				if not (row or realrow) then
 					for i, col in ipairs(st.cols) do 
 						if i ~= column then -- clear out all other sort marks
@@ -514,14 +514,14 @@ do
 						sortorder = "dsc";
 					end
 					cols[column].sort = sortorder;
-					st:SortData();
+					table:SortData();
 				else
-					if self.selected == realrow then 
-						self.selected = nil;
+					if table.selected == realrow then 
+						table.selected = nil;
 					else
-						self.selected = realrow;
+						table.selected = realrow;
 					end
-					self:Refresh();
+					table:Refresh();
 				end
 				return true;
 			end,
@@ -586,7 +586,7 @@ do
 							st.rows[i]:Hide();
 							fShow = false;
 						end
-						fnDoCellUpdate(st, rowFrame, cellFrame, st.data, st.cols, row, st.filtered[row], col, fShow);
+						fnDoCellUpdate(rowFrame, cellFrame, st.data, st.cols, row, st.filtered[row], col, fShow, st);
 					end
 				end
 			end
