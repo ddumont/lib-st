@@ -1,4 +1,5 @@
-type: luadoc
-input-file: Core.lua
-output-page: "API"
+-
+ type: luadoc
+ input-file: Core.lua
+ output-page: "API"
 
