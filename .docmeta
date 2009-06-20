@@ -1,3 +1,4 @@
 type: luadoc
-input-files: "**/*.lua"
-output-directory: API
+input-file: Core.lua
+output-page: "API"
+
