@@ -227,10 +227,10 @@ do
 		self:SetWidth();
 	end
 	
---- API for external addons to initialize the recipe database with a specific profession
--- @name ScrollingTable:Show
--- @usage Used to show the scrolling table when hidden.
-	local Show = function(self)
+	--- API for external addons to initialize the recipe database with a specific profession
+	-- @name ScrollingTable:Show
+	-- @usage Used to show the scrolling table when hidden.
+	local function Show (self)
 		self.frame:Show();
 		self.scrollframe:Show();
 		self.showing = true;
