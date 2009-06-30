@@ -390,7 +390,7 @@ do
 			local celldata = rowdata.cols[column];
 			
 			if type(celldata.value) == "function" then 
-				cellFrame.text:SetText(celldata.value(unpack(celldata.args or {})) );
+				cellFrame.text:SetText(celldata.value(unpack(celldata.args or {rowdata})) );
 			else
 				cellFrame.text:SetText(celldata.value);
 			end
@@ -404,13 +404,13 @@ do
 			 		if not color then 
 			 			color = defaultcolor;
 			 		else
-			 			colorargs = rowdata.colorargs;
+			 			colorargs = rowdata.colorargs or {rowdata};
 			 		end
 			 	else
-			 		colorargs = cols[column].colorargs;
+			 		colorargs = cols[column].colorargs or {rowdata};
 			 	end
 			else
-				colorargs = celldata.colorargs;
+				colorargs = celldata.colorargs or {rowdata};
 			end	
 			if type(color) == "function" then 
 				color = color(unpack(colorargs or {cellFrame}));
