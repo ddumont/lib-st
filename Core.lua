@@ -290,11 +290,12 @@ do
 		local cella, cellb = self.data[rowa].cols[sortbycol], self.data[rowb].cols[sortbycol];
 		local a1, b1 = cella.value, cellb.value;
 		local column = self.cols[sortbycol];
+		
 		if type(a1) == "function" then 
-			a1 = a1(unpack(cella.args or {}));
+			a1 = a1(unpack(cella.args or {self.data, self.cols, rowa, sortbycol, self}));
 		end
 		if type(b1) == "function" then 
-			b1 = b1(unpack(cellb.args or {}));
+			b1 = b1(unpack(cellb.args or {self.data, self.cols, rowb, sortbycol, self}));
 		end
 		
 		if type(a1) ~= type(b1) then
@@ -390,7 +391,7 @@ do
 			local rowdata = data[realrow];
 			local celldata = rowdata.cols[column];
 			
-			local defaultargs = {rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table};
+			local defaultargs = {data, cols, realrow, column, table};
 			if type(celldata.value) == "function" then 
 				cellFrame.text:SetText(celldata.value(unpack(celldata.args or defaultargs)) );
 			else
