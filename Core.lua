@@ -385,18 +385,21 @@ do
 	end
 	
 	local DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
+	
 		if fShow then
 			local rowdata = data[realrow];
 			local celldata = rowdata.cols[column];
 			
+			local defaultargs = {rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table};
 			if type(celldata.value) == "function" then 
-				cellFrame.text:SetText(celldata.value(unpack(celldata.args or {rowdata})) );
+				cellFrame.text:SetText(celldata.value(unpack(celldata.args or defaultargs)) );
 			else
 				cellFrame.text:SetText(celldata.value);
 			end
 			
 			local color = celldata.color;
 			local colorargs = nil;
+			
 			if not color then 
 			 	color = cols[column].color;
 			 	if not color then 
@@ -404,16 +407,16 @@ do
 			 		if not color then 
 			 			color = defaultcolor;
 			 		else
-			 			colorargs = rowdata.colorargs or {rowdata};
+			 			colorargs = rowdata.colorargs or defaultargs;
 			 		end
 			 	else
-			 		colorargs = cols[column].colorargs or {rowdata};
+			 		colorargs = cols[column].colorargs or defaultargs;
 			 	end
 			else
-				colorargs = celldata.colorargs or {rowdata};
+				colorargs = celldata.colorargs or defaultargs;
 			end	
 			if type(color) == "function" then 
-				color = color(unpack(colorargs or {cellFrame}));
+				color = color(unpack(colorargs));
 			end
 			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
 			
