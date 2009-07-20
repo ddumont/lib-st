@@ -361,9 +361,9 @@ do
 		end
 		
 		if red then self.defaulthighlightblank["r"] = red; end
-		if green then self.defaulthighlightblank["g"] = red; end
-		if blue then self.defaulthighlightblank["b"] = red; end
-		if alpha then self.defaulthighlightblank["a"] = red; end
+		if green then self.defaulthighlightblank["g"] = green; end
+		if blue then self.defaulthighlightblank["b"] = blue; end
+		if alpha then self.defaulthighlightblank["a"] = alpha; end
 	end
 	
 	function GetDefaultHighlight(self)
@@ -376,9 +376,9 @@ do
 		end
 		
 		if red then self.defaulthighlight["r"] = red; end
-		if green then self.defaulthighlight["g"] = red; end
-		if blue then self.defaulthighlight["b"] = red; end
-		if alpha then self.defaulthighlight["a"] = red; end
+		if green then self.defaulthighlight["g"] = green; end
+		if blue then self.defaulthighlight["b"] = blue; end
+		if alpha then self.defaulthighlight["a"] = alpha; end
 	end
 	
 	function EnableSelection(self, flag)
