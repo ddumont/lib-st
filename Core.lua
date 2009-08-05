@@ -126,8 +126,10 @@ do
 					if self.events then 
 						for event, handler in pairs(self.events) do 
 							col:SetScript(event, function(cellFrame, ...)
-								local realindex = table.filtered[i+table.offset];
-								table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, ... );
+								if table.offset then 
+									local realindex = table.filtered[i+table.offset];
+									table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, ... );
+								end
 							end);
 						end
 					end
@@ -177,7 +179,8 @@ do
 			local colFrameName =  row:GetName().."Col"..i;
 			local col = getglobal(colFrameName);
 			if not col then 
-				col = CreateFrame("Button", colFrameName, row);	
+				col = CreateFrame("Button", colFrameName, row);					
+				col:RegisterForClicks("AnyUp");	 -- LS: right clicking on header
 				
 				if self.events then 	
 					for event, handler in pairs(self.events) do 
@@ -507,30 +510,33 @@ do
 				end
 				return true;
 			end,
-			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
-				if not (row or realrow) then
-					for i, col in ipairs(st.cols) do 
-						if i ~= column then -- clear out all other sort marks
-							cols[i].sort = nil;
+			["OnClick"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, table, button, ...)		-- LS: added "button" argument
+				if button == "LeftButton" then	-- LS: only handle on LeftButton click (right passes thru)
+					if not (row or realrow) then
+						for i, col in ipairs(st.cols) do 
+							if i ~= column then -- clear out all other sort marks
+								cols[i].sort = nil;
+							end
 						end
-					end
-					local sortorder = "asc";
-					if not cols[column].sort and cols[column].defaultsort then
-						sortorder = cols[column].defaultsort; -- sort by columns default sort first;
-					elseif cols[column].sort and cols[column].sort:lower() == "asc" then 
-						sortorder = "dsc";
-					end
-					cols[column].sort = sortorder;
-					table:SortData();
-				else
-					if table.selected == realrow then 
-						table.selected = nil;
+						local sortorder = "asc";
+						if not cols[column].sort and cols[column].defaultsort then
+							sortorder = cols[column].defaultsort; -- sort by columns default sort first;
+						elseif cols[column].sort and cols[column].sort:lower() == "asc" then 
+							sortorder = "dsc";
+						end
+						cols[column].sort = sortorder;
+						table:SortData();
+				
 					else
-						table.selected = realrow;
+						if table.selected == realrow then 
+							table.selected = nil;
+						else
+							table.selected = realrow;
+						end
+						table:Refresh();
 					end
-					table:Refresh();
+					return true;
 				end
-				return true;
 			end,
 		};
 		st.data = {};
@@ -600,7 +606,7 @@ do
 		end
 		
 		scrollframe:SetScript("OnVerticalScroll", function(self, offset)
-			FauxScrollFrame_OnVerticalScroll(self, offset, st.rowHeight, st.Refresh);
+			FauxScrollFrame_OnVerticalScroll(self, offset, st.rowHeight, function() st:Refresh() end);					-- LS: putting st:Refresh() in a function call passes the st as the 1st arg which lets you reference the st if you decide to hook the refresh
 		end);
 	
 		st:SetFilter(Filter);
