@@ -31,7 +31,7 @@ do
 		self:Refresh();
 	end
 	
-	local SetHighLightColor = function(frame, color)
+	local SetHighLightColor = function(self, frame, color)
 		if not frame.highlight then 
 			frame.highlight = frame:CreateTexture(nil, "OVERLAY");
 			frame.highlight:SetAllPoints(frame);
@@ -426,9 +426,9 @@ do
 			
 			if table.fSelect then 
 				if table.selected == realrow then 
-					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
+					table:SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				else
-					SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
+					table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 				end
 			end
 		else	
@@ -462,6 +462,7 @@ do
 		st.GetDefaultHighlightBlank = GetDefaultHighlightBlank;
 		st.GetDefaultHighlight = GetDefaultHighlight;
 		st.EnableSelection = EnableSelection;
+		st.SetHighLightColor = SetHighLightColor;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -496,7 +497,7 @@ do
 				if row and realrow then 
 					local rowdata = data[realrow];
 					local celldata = rowdata.cols[column];
-					SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
+					table:SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				end
 				return true;
 			end, 
@@ -505,7 +506,7 @@ do
 					local rowdata = data[realrow];
 					local celldata = rowdata.cols[column];
 					if realrow ~= table.selected or not table.fSelect then 
-						SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
+						table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 					end
 				end
 				return true;
