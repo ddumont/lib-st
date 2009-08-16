@@ -394,9 +394,12 @@ do
 			local rowdata = data[realrow];
 			local celldata = rowdata.cols[column];
 			
-			local defaultargs = {data, cols, realrow, column, table};
 			if type(celldata.value) == "function" then 
-				cellFrame.text:SetText(celldata.value(unpack(celldata.args or defaultargs)) );
+				if celldata.args then 
+					cellFrame.text:SetText(celldata.value(unpack(celldata.args)));
+				else
+					cellFrame.text:SetText(celldata.value(data, cols, realrow, column, table));
+				end
 			else
 				cellFrame.text:SetText(celldata.value);
 			end
@@ -411,16 +414,20 @@ do
 			 		if not color then 
 			 			color = defaultcolor;
 			 		else
-			 			colorargs = rowdata.colorargs or defaultargs;
+			 			colorargs = rowdata.colorargs;
 			 		end
 			 	else
-			 		colorargs = cols[column].colorargs or defaultargs;
+			 		colorargs = cols[column].colorargs;
 			 	end
 			else
-				colorargs = celldata.colorargs or defaultargs;
+				colorargs = celldata.colorargs;
 			end	
 			if type(color) == "function" then 
-				color = color(unpack(colorargs));
+				if colorargs then 
+					color = color(unpack(colorargs));
+				else 
+					color = color(data, cols, realrow, column, table);
+				end
 			end
 			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
 			
