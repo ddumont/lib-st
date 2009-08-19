@@ -88,6 +88,7 @@ do
 	end
 	
 	local SetDisplayRows = function(self, num, rowHeight)
+		local table = self; -- reference saved for closure
 		-- should always set columns first
 		self.displayRows = num;
 		self.rowHeight = rowHeight;
@@ -128,7 +129,7 @@ do
 							col:SetScript(event, function(cellFrame, ...)
 								if table.offset then 
 									local realindex = table.filtered[i+table.offset];
-									table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, ... );
+									table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, i, realindex, j, table, ... );
 								end
 							end);
 						end
@@ -185,7 +186,7 @@ do
 				if self.events then 	
 					for event, handler in pairs(self.events) do 
 						col:SetScript(event, function(cellFrame, ...)
-							table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, nil, nil, i, ...);
+							table:FireUserEvent(col, event, handler, row, cellFrame, table.data, table.cols, nil, nil, i, table, ...);
 						end);
 					end
 				end
