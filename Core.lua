@@ -163,7 +163,12 @@ do
 		self:SetHeight();
 	end
 	
-	local SetDisplayCols = function(self, cols)
+	--- API for external addons to initialize the recipe database with a specific profession
+	-- @name ScrollingTable:SetDisplayCols
+	-- @description Set the column info for the scrolling table
+	-- @usage st:SetDisplayCols(cols)	
+	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-defaultsort
+	local function SetDisplayCols (self, cols)
 		local table = self; -- reference saved for closure
 		self.cols = cols;
 		
@@ -260,7 +265,12 @@ do
 		self:SortData();
 	end
 		
-	local SortData = function(self)
+	--- API for external addons to initialize the recipe database with a specific profession
+	-- @name ScrollingTable:SortData
+	-- @description Resorts the table using the rules specified in the table column info.
+	-- @usage st:SortData()	
+	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-defaultsort
+	local function SortData (self)
 		-- sanity check
 		if not(self.sorttable) or (#self.sorttable > #self.data)then 
 			self.sorttable = {};
