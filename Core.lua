@@ -167,7 +167,7 @@ do
 	-- @name ScrollingTable:SetDisplayCols
 	-- @description Set the column info for the scrolling table
 	-- @usage st:SetDisplayCols(cols)	
-	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-defaultsort
+	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-cols
 	local function SetDisplayCols (self, cols)
 		local table = self; -- reference saved for closure
 		self.cols = cols;
