@@ -233,18 +233,29 @@ do
 	
 	--- API for external addons to initialize the recipe database with a specific profession
 	-- @name ScrollingTable:Show
-	-- @usage Used to show the scrolling table when hidden.
+	-- @description Used to show the scrolling table when hidden.
+	-- @usage st:Show()
 	local function Show (self)
 		self.frame:Show();
 		self.scrollframe:Show();
 		self.showing = true;
 	end
-	local Hide = function(self)
+	
+	--- API for external addons to initialize the recipe database with a specific profession
+	-- @name ScrollingTable:Hide
+	-- @description Used to hide the scrolling table when shown.
+	-- @usage st:Hide()
+	local function Hide (self)
 		self.frame:Hide();
 		self.showing = false;
 	end
 	
-	local SetData = function(self, data)
+	--- API for external addons to initialize the recipe database with a specific profession
+	-- @name ScrollingTable:SetData
+	-- @description Sets the data for the scrolling table
+	-- @usage st:SetData(datatable)
+	-- @see http://www.wowace.com/addons/lib-st/pages/set-data/
+	local function SetData (self, data)
 		self.data = data;
 		self:SortData();
 	end
