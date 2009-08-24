@@ -48,7 +48,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:RegisterEvents
+	-- @name RegisterEvents
 	-- @description Set the event handlers for various ui events for each cell.
 	-- @usage st:RegisterEvents(events, true)	
 	-- @see http://www.wowace.com/addons/lib-st/pages/ui-events/
@@ -93,7 +93,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:SetDisplayRows
+	-- @name SetDisplayRows
 	-- @description Set the number and height of displayed rows
 	-- @usage st:SetDisplayRows(10, 15)	
 	local function SetDisplayRows (self, num, rowHeight)
@@ -173,7 +173,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:SetDisplayCols
+	-- @name SetDisplayCols
 	-- @description Set the column info for the scrolling table
 	-- @usage st:SetDisplayCols(cols)	
 	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-cols
@@ -246,7 +246,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:Show
+	-- @name Show
 	-- @description Used to show the scrolling table when hidden.
 	-- @usage st:Show()
 	local function Show (self)
@@ -256,7 +256,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:Hide
+	-- @name Hide
 	-- @description Used to hide the scrolling table when shown.
 	-- @usage st:Hide()
 	local function Hide (self)
@@ -265,7 +265,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:SetData
+	-- @name SetData
 	-- @description Sets the data for the scrolling table
 	-- @usage st:SetData(datatable)
 	-- @see http://www.wowace.com/addons/lib-st/pages/set-data/
@@ -275,7 +275,7 @@ do
 	end
 		
 	--- API for a ScrollingTable table
-	-- @name ScrollingTable:SortData
+	-- @name SortData
 	-- @description Resorts the table using the rules specified in the table column info.
 	-- @usage st:SortData()	
 	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-defaultsort
