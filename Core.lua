@@ -31,7 +31,12 @@ do
 		self:Refresh();
 	end
 	
-	local SetHighLightColor = function(self, frame, color)
+	--- API for a ScrollingTable table
+	-- @name SetHighLightColor
+	-- @description Set the row highlight color of a frame ( cell or row )
+	-- @usage st:SetHighLightColor(rowFrame, color)	
+	-- @see http://www.wowace.com/addons/lib-st/pages/colors/
+	local function SetHighLightColor (self, frame, color)
 		if not frame.highlight then 
 			frame.highlight = frame:CreateTexture(nil, "OVERLAY");
 			frame.highlight:SetAllPoints(frame);
@@ -320,16 +325,29 @@ do
 		end
 	end
 	
-	local CompareSort = function (self, rowa, rowb, sortbycol)
+	--- API for a ScrollingTable table
+	-- @name SetHighLightColor
+	-- @description CompareSort function used to determine how to sort column values.  Can be overridden in column data or table data.
+	-- @usage used internally.
+	-- @see Core.lua
+	local function CompareSort (self, rowa, rowb, sortbycol)
 		local cella, cellb = self.data[rowa].cols[sortbycol], self.data[rowb].cols[sortbycol];
 		local a1, b1 = cella.value, cellb.value;
 		local column = self.cols[sortbycol];
 		
 		if type(a1) == "function" then 
-			a1 = a1(unpack(cella.args or {self.data, self.cols, rowa, sortbycol, self}));
+			if (cella.args) then 
+				a1 = a1(unpack(cella.args))
+			else
+				a1 = a1(self.data, self.cols, rowa, sortbycol, self);
+			end
 		end
 		if type(b1) == "function" then 
-			b1 = b1(unpack(cellb.args or {self.data, self.cols, rowb, sortbycol, self}));
+			if (cellb.args) then 
+				b1 = b1(unpack(cellb.args))
+			else
+				b1 = b1(self.data, self.cols, rowb, sortbycol, self);
+			end
 		end
 		
 		if type(a1) ~= type(b1) then
@@ -366,11 +384,16 @@ do
 		end
 	end
 	
-	local Filter = function(self, ...)
+	local Filter = function(self, rowdata)
 		return true;
 	end
 	
-	local SetFilter = function(self, Filter)
+	--- API for a ScrollingTable table
+	-- @name SetFilter
+	-- @description Set a display filter for the table.
+	-- @usage st:SetFilter( function (self, ...) return true end )
+	-- @see http://www.wowace.com/addons/lib-st/pages/filtering-the-scrolling-table/
+	local function SetFilter (self, Filter)
 		self.Filter = Filter;
 		self:SortData();
 	end
