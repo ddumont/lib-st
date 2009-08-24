@@ -443,7 +443,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name SetHighLightColor
+	-- @name DoCellUpdate
 	-- @description Cell update function used to paint each cell.  Can be overridden in column data or table data.
 	-- @usage used internally.
 	-- @see http://www.wowace.com/addons/lib-st/pages/docell-update/
@@ -500,7 +500,6 @@ do
 			cellFrame.text:SetText("");
 		end
 	end
-
 	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
