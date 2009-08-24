@@ -408,7 +408,7 @@ do
 		return result;
 	end
 	
-		function GetDefaultHighlightBlank(self)
+	function GetDefaultHighlightBlank(self)
 		return self.defaulthighlightblank;
 	end
 	
@@ -442,8 +442,12 @@ do
 		self.fSelect = flag;
 	end
 	
-	local DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
-	
+	--- API for a ScrollingTable table
+	-- @name SetHighLightColor
+	-- @description Cell update function used to paint each cell.  Can be overridden in column data or table data.
+	-- @usage used internally.
+	-- @see http://www.wowace.com/addons/lib-st/pages/docell-update/
+	local function DoCellUpdate (rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
 		if fShow then
 			local rowdata = data[realrow];
 			local celldata = rowdata.cols[column];
