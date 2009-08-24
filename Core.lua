@@ -47,7 +47,12 @@ do
 		end
 	end
 	
-	local RegisterEvents = function(self, events, fRemoveOldEvents) 
+	--- API for a ScrollingTable table
+	-- @name ScrollingTable:RegisterEvents
+	-- @description Set the event handlers for various ui events for each cell.
+	-- @usage st:RegisterEvents(events, true)	
+	-- @see http://www.wowace.com/addons/lib-st/pages/ui-events/
+	local function RegisterEvents (self, events, fRemoveOldEvents) 
 		local table = self; -- save for closure later
 		
 		for i, row in ipairs(self.rows) do 
@@ -87,7 +92,11 @@ do
 		self.events = events;
 	end
 	
-	local SetDisplayRows = function(self, num, rowHeight)
+	--- API for a ScrollingTable table
+	-- @name ScrollingTable:SetDisplayRows
+	-- @description Set the number and height of displayed rows
+	-- @usage st:SetDisplayRows(10, 15)	
+	local function SetDisplayRows (self, num, rowHeight)
 		local table = self; -- reference saved for closure
 		-- should always set columns first
 		self.displayRows = num;
@@ -163,7 +172,7 @@ do
 		self:SetHeight();
 	end
 	
-	--- API for external addons to initialize the recipe database with a specific profession
+	--- API for a ScrollingTable table
 	-- @name ScrollingTable:SetDisplayCols
 	-- @description Set the column info for the scrolling table
 	-- @usage st:SetDisplayCols(cols)	
@@ -236,7 +245,7 @@ do
 		self:SetWidth();
 	end
 	
-	--- API for external addons to initialize the recipe database with a specific profession
+	--- API for a ScrollingTable table
 	-- @name ScrollingTable:Show
 	-- @description Used to show the scrolling table when hidden.
 	-- @usage st:Show()
@@ -246,7 +255,7 @@ do
 		self.showing = true;
 	end
 	
-	--- API for external addons to initialize the recipe database with a specific profession
+	--- API for a ScrollingTable table
 	-- @name ScrollingTable:Hide
 	-- @description Used to hide the scrolling table when shown.
 	-- @usage st:Hide()
@@ -255,7 +264,7 @@ do
 		self.showing = false;
 	end
 	
-	--- API for external addons to initialize the recipe database with a specific profession
+	--- API for a ScrollingTable table
 	-- @name ScrollingTable:SetData
 	-- @description Sets the data for the scrolling table
 	-- @usage st:SetData(datatable)
@@ -265,7 +274,7 @@ do
 		self:SortData();
 	end
 		
-	--- API for external addons to initialize the recipe database with a specific profession
+	--- API for a ScrollingTable table
 	-- @name ScrollingTable:SortData
 	-- @description Resorts the table using the rules specified in the table column info.
 	-- @usage st:SortData()	
