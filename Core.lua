@@ -326,7 +326,7 @@ do
 	end
 	
 	--- API for a ScrollingTable table
-	-- @name SetHighLightColor
+	-- @name CompareSort
 	-- @description CompareSort function used to determine how to sort column values.  Can be overridden in column data or table data.
 	-- @usage used internally.
 	-- @see Core.lua
