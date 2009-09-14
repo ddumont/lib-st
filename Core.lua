@@ -537,25 +537,7 @@ do
 				
 		st.displayRows = numRows or 12;
 		st.rowHeight = rowHeight or 15;
-		st.cols = cols or {
-			{
-				["name"] = "Test 1",
-			 	["width"] = 50,
-			 	["color"] = { ["r"] = 0.5, ["g"] = 0.5, ["b"] = 1.0, ["a"] = 1.0 },
-			}, -- [1]
-			{ 
-				["name"] = "Test 2", 
-				["width"] = 50, 
-				["align"] = "CENTER",
-				["bgcolor"] = { ["r"] = 1.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.2 },
-			}, -- [2]
-			{ 
-				["name"] = "Test 3", 
-				["width"] = 50, 
-				["align"] = "RIGHT",
-				["bgcolor"] = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.5 },
-			}, -- [3]
-		};
+		st.cols = cols;
 		st.DefaultEvents = {
 			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
 				if row and realrow then 
