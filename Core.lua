@@ -438,8 +438,29 @@ do
 		if alpha then self.defaulthighlight["a"] = alpha; end
 	end
 	
-	function EnableSelection(self, flag)
+	--- API for a ScrollingTable table
+	-- @name EnableSelection
+	-- @description Turn on or off selection on a table according to flag.  Will not refresh the table display.
+	-- @usage st:EnableSelection(true)
+	local function EnableSelection(self, flag)
 		self.fSelect = flag;
+	end
+	
+	--- API for a ScrollingTable table
+	-- @name ClearSelection
+	-- @description Clear the currently selected row.  You should not need to refresh the table.
+	-- @usage st:ClearSelection()
+	local function ClearSelection(self)
+		self:SetSelection(nil);
+	end
+
+	--- API for a ScrollingTable table
+	-- @name SetSelection
+	-- @description Sets the currently selected to 'realrow'.  REalrow is the unaltered index of the data row in your table. You should not need to refresh the table.
+	-- @usage st:SetSelection(12)	
+	local function SetSelection(self, realrow)
+		table.selected = realrow;
+		table:Refresh();
 	end
 	
 	--- API for a ScrollingTable table
@@ -527,6 +548,8 @@ do
 		st.GetDefaultHighlight = GetDefaultHighlight;
 		st.EnableSelection = EnableSelection;
 		st.SetHighLightColor = SetHighLightColor;
+		st.ClearSelection = ClearSelection;
+		st.SetSelection = SetSelection;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -576,11 +599,10 @@ do
 				
 					else
 						if table.selected == realrow then 
-							table.selected = nil;
+							table:ClearSelection();
 						else
-							table.selected = realrow;
+							table:SetSelection(realrow);
 						end
-						table:Refresh();
 					end
 					return true;
 				end
