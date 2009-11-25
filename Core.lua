@@ -459,8 +459,8 @@ do
 	-- @description Sets the currently selected row to 'realrow'.  Realrow is the unaltered index of the data row in your table. You should not need to refresh the table.
 	-- @usage st:SetSelection(12)	
 	local function SetSelection(self, realrow)
-		table.selected = realrow;
-		table:Refresh();
+		self.selected = realrow;
+		self:Refresh();
 	end
 	
 	--- API for a ScrollingTable table
@@ -468,7 +468,7 @@ do
 	-- @description Gets the currently selected to row.  Return will be the unaltered index of the data row that is selected.
 	-- @usage st:GetSelection()	
 	local function GetSelection(self)
-		return table.selected;
+		return self.selected;
 	end
 	
 	--- API for a ScrollingTable table
