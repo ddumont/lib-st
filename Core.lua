@@ -456,11 +456,19 @@ do
 
 	--- API for a ScrollingTable table
 	-- @name SetSelection
-	-- @description Sets the currently selected to 'realrow'.  REalrow is the unaltered index of the data row in your table. You should not need to refresh the table.
+	-- @description Sets the currently selected row to 'realrow'.  Realrow is the unaltered index of the data row in your table. You should not need to refresh the table.
 	-- @usage st:SetSelection(12)	
 	local function SetSelection(self, realrow)
 		table.selected = realrow;
 		table:Refresh();
+	end
+	
+	--- API for a ScrollingTable table
+	-- @name GetSelection
+	-- @description Gets the currently selected to row.  Return will be the unaltered index of the data row that is selected.
+	-- @usage st:GetSelection()	
+	local function GetSelection(self)
+		return table.selected;
 	end
 	
 	--- API for a ScrollingTable table
@@ -550,6 +558,7 @@ do
 		st.SetHighLightColor = SetHighLightColor;
 		st.ClearSelection = ClearSelection;
 		st.SetSelection = SetSelection;
+		st.GetSelection = GetSelection;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -598,7 +607,7 @@ do
 						table:SortData();
 				
 					else
-						if table.selected == realrow then 
+						if table:GetSelection() == realrow then 
 							table:ClearSelection();
 						else
 							table:SetSelection(realrow);
