@@ -268,16 +268,6 @@ do
 		self.frame:Hide();
 		self.showing = false;
 	end
-	
-	--- API for a ScrollingTable table
-	-- @name SetData
-	-- @description Sets the data for the scrolling table
-	-- @usage st:SetData(datatable)
-	-- @see http://www.wowace.com/addons/lib-st/pages/set-data/
-	local function SetData (self, data)
-		self.data = data;
-		self:SortData();
-	end
 		
 	--- API for a ScrollingTable table
 	-- @name SortData
@@ -331,8 +321,11 @@ do
 	-- @usage used internally.
 	-- @see Core.lua
 	local function CompareSort (self, rowa, rowb, sortbycol)
-		local cella, cellb = self.data[rowa].cols[sortbycol], self.data[rowb].cols[sortbycol];
+		local cella, cellb = self:GetCell(rowa, sortbycol, true), self:GetCell(rowb, sortbycol, true);
 		local a1, b1 = cella.value, cellb.value;
+		if self.isMinimalDataformat then 
+			a1, b1 = cella, cellb;
+		end
 		local column = self.cols[sortbycol];
 		
 		if type(a1) == "function" then 
@@ -401,8 +394,10 @@ do
 	local DoFilter = function(self)
 		local result = {};
 		for row = 1, #self.data do 
-			if self:Filter(self.data[self.sorttable[row]]) then
-				table.insert(result, self.sorttable[row]);
+			local realrow = self.sorttable[row];
+			local rowData = self:GetRow(realrow, true);
+			if self:Filter(rowData) then
+				table.insert(result, realrow);
 			end
 		end
 		return result;
@@ -478,17 +473,18 @@ do
 	-- @see http://www.wowace.com/addons/lib-st/pages/docell-update/
 	local function DoCellUpdate (rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
 		if fShow then
-			local rowdata = data[realrow];
-			local celldata = rowdata.cols[column];
+			local rowdata = table:GetRow(realrow, true);
+			local celldata = table:GetCell(rowdata, column);
 			
-			if type(celldata.value) == "function" then 
+			local cellvalue = celldata.value or celldata;
+			if type(cellvalue) == "function" then 
 				if celldata.args then 
-					cellFrame.text:SetText(celldata.value(unpack(celldata.args)));
+					cellFrame.text:SetText(cellvalue(unpack(celldata.args)));
 				else
-					cellFrame.text:SetText(celldata.value(data, cols, realrow, column, table));
+					cellFrame.text:SetText(cellvalue(data, cols, realrow, column, table));
 				end
 			else
-				cellFrame.text:SetText(celldata.value);
+				cellFrame.text:SetText(cellvalue);
 			end
 			
 			local color = celldata.color;
@@ -530,6 +526,47 @@ do
 		end
 	end
 	
+	--- API for a ScrollingTable table
+	-- @name SetData
+	-- @description Sets the data for the scrolling table
+	-- @usage st:SetData(datatable)
+	-- @see http://www.wowace.com/addons/lib-st/pages/set-data/
+	local function SetData (self, data, isMinimalDataformat)
+		self.isMinimalDataformat = isMinimalDataformat;
+		self.data = data;
+		self:SortData();
+	end
+	
+	--- API for a ScrollingTable table
+	-- @name GetRow
+	-- @description Returns the data row of the table from the given row index 
+	-- @usage used internally.
+	local function GetRow(self, row, isRealRow)
+		if fRealRow then 
+			return self.data[row];
+		else
+			return self.data[self.sorttable[row]];
+		end
+	end
+	
+	--- API for a ScrollingTable table
+	-- @name GetCell
+	-- @description Returns the cell data of the given row from the given row and column index 
+	-- @usage used internally.
+	local function GetCell(self, row, col, isRealRow)
+		local rowdata = row;
+		if type(row) == "number" then 
+			rowdata = self:GetRow(row, isRealRow);
+		end
+		
+		if self.isMinimalDataformat then 
+			return row[col];
+		else
+			return row.cols[col];
+		end
+	end
+	
+	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
 		self.framecount = self.framecount or 1; 
@@ -559,6 +596,8 @@ do
 		st.ClearSelection = ClearSelection;
 		st.SetSelection = SetSelection;
 		st.GetSelection = GetSelection;
+		st.GetCell = GetCell;
+		st.GetRow = GetRow;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -573,16 +612,16 @@ do
 		st.DefaultEvents = {
 			["OnEnter"] = function (rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
 				if row and realrow then 
-					local rowdata = data[realrow];
-					local celldata = rowdata.cols[column];
+					local rowdata = table:GetRow(realrow, true);
+					local celldata = table:GetCell(rowdata, column);
 					table:SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				end
 				return true;
 			end, 
 			["OnLeave"] = function(rowFrame, cellFrame, data, cols, row, realrow, column, table, ...)
 				if row and realrow then 
-					local rowdata = data[realrow];
-					local celldata = rowdata.cols[column];
+					local rowdata = table:GetRow(realrow, true);
+					local celldata = table:GetCell(rowdata, column);
 					if realrow ~= table.selected or not table.fSelect then 
 						table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 					end
@@ -662,10 +701,10 @@ do
 						local cellFrame = rowFrame.cols[col];
 						local fShow = true;
 						local fnDoCellUpdate = DoCellUpdate;
-						if st.data[st.filtered[row]] then
+						local rowData = st:GetRow(row);
+						if rowData then
 							st.rows[i]:Show();
-							local rowData = st.data[st.filtered[row]];
-							local cellData = rowData.cols[col];
+							local cellData = st:GetCell(rowData, col);
 							if cellData.DoCellUpdate then 
 								fnDoCellUpdate = cellData.DoCellUpdate;
 							elseif st.cols[col].DoCellUpdate then 
