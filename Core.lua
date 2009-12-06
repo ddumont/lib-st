@@ -276,7 +276,7 @@ do
 	-- @see http://www.wowace.com/addons/lib-st/pages/create-st/#w-defaultsort
 	local function SortData (self)
 		-- sanity check
-		if not(self.sorttable) or (#self.sorttable > #self.data)then 
+		if not(self.sorttable) or (#self.sorttable ~= #self.data)then 
 			self.sorttable = {};
 		end
 		if #self.sorttable ~= #self.data then
