@@ -560,9 +560,9 @@ do
 		end
 		
 		if self.isMinimalDataformat then 
-			return row[col];
+			return rowdata[col];
 		else
-			return row.cols[col];
+			return rowdata.cols[col];
 		end
 	end
 	
