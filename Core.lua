@@ -322,10 +322,13 @@ do
 	-- @see Core.lua
 	local function CompareSort (self, rowa, rowb, sortbycol)
 		local cella, cellb = self:GetCell(rowa, sortbycol), self:GetCell(rowb, sortbycol);
-		local a1, b1 = cella.value, cellb.value;
-		if self.isMinimalDataformat then 
-			a1, b1 = cella, cellb;
+		local a1, b1 = cella, cellb;
+		if type(cella) == 'table' then  
+			a1 = cella.value; 
 		end
+		if type(cellb) == 'table' then 
+			b1 = cellb.value;
+		end 
 		local column = self.cols[sortbycol];
 		
 		if type(a1) == "function" then 
@@ -346,13 +349,13 @@ do
 		if type(a1) ~= type(b1) then
 			local typea, typeb = type(a1), type(b1);
 			if typea == "number" and typeb == "string" then 
-				if tonumber(typeb) then -- is it a number in a string?
+				if tonumber(b1) then -- is it a number in a string?
 					b1 = StringToNumber(b1); -- "" = 0
 				else
 					a1 = tostring(a1);
 				end
 			elseif typea == "string" and typeb == "number" then 
-				if tonumber(typea) then -- is it a number in a string?
+				if tonumber(a1) then -- is it a number in a string?
 					a1 = StringToNumber(a1); -- "" = 0
 				else
 					b1 = tostring(b1);
@@ -365,7 +368,7 @@ do
 			if nextcol.comparesort then 
 				return nextcol.comparesort(self, rowa, rowb, column.sortnext);
 			else
-				return self:CompareSort(rowa, rowb, column.sortnext);
+				return a1 < b1;
 			end
 		else
 			local direction = column.sort or column.defaultsort or "asc";
@@ -476,7 +479,10 @@ do
 			local rowdata = table:GetRow(realrow, true);
 			local celldata = table:GetCell(rowdata, column);
 			
-			local cellvalue = celldata.value or celldata;
+			local cellvalue = celldata;
+			if type(celldata) == "table" then
+				cellvalue = celldata.value;
+			end
 			if type(cellvalue) == "function" then 
 				if celldata.args then 
 					cellFrame.text:SetText(cellvalue(unpack(celldata.args)));
@@ -487,9 +493,12 @@ do
 				cellFrame.text:SetText(cellvalue);
 			end
 			
-			local color = celldata.color;
+			local color = nil;
+			if type(celldata) == "table" then
+				color = celldata.color;
+			end
+						
 			local colorargs = nil;
-			
 			if not color then 
 			 	color = cols[column].color;
 			 	if not color then 
@@ -514,9 +523,14 @@ do
 			end
 			cellFrame.text:SetTextColor(color.r, color.g, color.b, color.a);
 			
+			local highlight = nil;
+			if type(celldata) == "table" then
+				highlight = celldata.highlight;
+			end
+			
 			if table.fSelect then 
 				if table.selected == realrow then 
-					table:SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
+					table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				else
 					table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 				end
@@ -614,7 +628,11 @@ do
 				if row and realrow then 
 					local rowdata = table:GetRow(realrow, true);
 					local celldata = table:GetCell(rowdata, column);
-					table:SetHighLightColor(rowFrame, celldata.highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
+					local highlight = nil;
+					if type(celldata) == "table" then
+						highlight = celldata.highlight;
+					end
+					table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight());
 				end
 				return true;
 			end, 
