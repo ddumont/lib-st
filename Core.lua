@@ -321,7 +321,7 @@ do
 	-- @usage used internally.
 	-- @see Core.lua
 	local function CompareSort (self, rowa, rowb, sortbycol)
-		local cella, cellb = self:GetCell(rowa, sortbycol, true), self:GetCell(rowb, sortbycol, true);
+		local cella, cellb = self:GetCell(rowa, sortbycol), self:GetCell(rowb, sortbycol);
 		local a1, b1 = cella.value, cellb.value;
 		if self.isMinimalDataformat then 
 			a1, b1 = cella, cellb;
