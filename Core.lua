@@ -705,7 +705,7 @@ do
 						if rowData then
 							st.rows[i]:Show();
 							local cellData = st:GetCell(rowData, col);
-							if cellData.DoCellUpdate then 
+							if type(cellData) == "table" and cellData.DoCellUpdate then 
 								fnDoCellUpdate = cellData.DoCellUpdate;
 							elseif st.cols[col].DoCellUpdate then 
 								fnDoCellUpdate = st.cols[col].DoCellUpdate;
