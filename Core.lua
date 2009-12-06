@@ -368,7 +368,7 @@ do
 			if nextcol.comparesort then 
 				return nextcol.comparesort(self, rowa, rowb, column.sortnext);
 			else
-				return a1 < b1;
+				return false;
 			end
 		else
 			local direction = column.sort or column.defaultsort or "asc";
