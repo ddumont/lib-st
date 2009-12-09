@@ -323,11 +323,11 @@ do
 	local function CompareSort (self, rowa, rowb, sortbycol)
 		local cella, cellb = self:GetCell(rowa, sortbycol), self:GetCell(rowb, sortbycol);
 		local a1, b1 = cella, cellb;
-		if type(cella) == 'table' then  
-			a1 = cella.value; 
+		if type(a1) == 'table' then  
+			a1 = a1.value; 
 		end
-		if type(cellb) == 'table' then 
-			b1 = cellb.value;
+		if type(b1) == 'table' then 
+			b1 = b1.value;
 		end 
 		local column = self.cols[sortbycol];
 		
