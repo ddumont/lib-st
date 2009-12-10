@@ -556,7 +556,7 @@ do
 	-- @description Returns the data row of the table from the given row index 
 	-- @usage used internally.
 	local function GetRow(self, row, isRealRow)
-		if fRealRow then 
+		if isRealRow then 
 			return self.data[row];
 		else
 			return self.data[self.sorttable[row]];
