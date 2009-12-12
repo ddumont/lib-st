@@ -556,7 +556,7 @@ do
 	-- @description Returns the data row of the table from the given data row index 
 	-- @usage used internally.
 	local function GetRow(self, realrow)
-		return self.data[row];
+		return self.data[realrow];
 	end
 	
 	--- API for a ScrollingTable table
@@ -710,13 +710,13 @@ do
 			for i = 1, st.displayRows do
 				local row = i + o;	
 				if st.rows then
+					local rowFrame = st.rows[i];
+					local realrow = st.filtered[row];
+					local rowData = st:GetRow(realrow);
+					local fShow = true;
 					for col = 1, #st.cols do
-						local rowFrame = st.rows[i];
 						local cellFrame = rowFrame.cols[col];
-						local fShow = true;
 						local fnDoCellUpdate = DoCellUpdate;
-						local realrow = st.filtered[row];
-						local rowData = st:GetRow(realrow);
 						if rowData then
 							st.rows[i]:Show();
 							local cellData = st:GetCell(rowData, col);
