@@ -341,7 +341,7 @@ do
 		if type(b1) == "function" then 
 			if (cellb.args) then 
 				b1 = b1(unpack(cellb.args))
-			else
+			else	
 				b1 = b1(self.data, self.cols, rowb, sortbycol, self);
 			end
 		end
@@ -363,13 +363,21 @@ do
 			end
 		end
 		
-		if a1 == b1 and column.sortnext and (not(self.cols[column.sortnext].sort)) then 
-			local nextcol = self.cols[column.sortnext];
-			if nextcol.comparesort then 
-				return nextcol.comparesort(self, rowa, rowb, column.sortnext);
+		if a1 == b1 then 
+			if column.sortnext then
+				local nextcol = self.cols[column.sortnext];
+				if not(nextcol.sort) then 
+					if nextcol.comparesort then 
+						return nextcol.comparesort(self, rowa, rowb, column.sortnext);
+					else
+						return self:CompareSort(rowa, rowb, column.sortnext);
+					end
+				else
+					return false;
+				end
 			else
-				return false;
-			end
+				return false; 
+			end 
 		else
 			local direction = column.sort or column.defaultsort or "asc";
 			if direction:lower() == "asc" then 		
