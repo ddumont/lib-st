@@ -616,6 +616,7 @@ do
 		st.GetSelection = GetSelection;
 		st.GetCell = GetCell;
 		st.GetRow = GetRow;
+		st.DoCellUpdate = DoCellUpdate;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -724,7 +725,7 @@ do
 					local fShow = true;
 					for col = 1, #st.cols do
 						local cellFrame = rowFrame.cols[col];
-						local fnDoCellUpdate = DoCellUpdate;
+						local fnDoCellUpdate = st.DoCellUpdate;
 						if rowData then
 							st.rows[i]:Show();
 							local cellData = st:GetCell(rowData, col);
