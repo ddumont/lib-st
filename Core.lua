@@ -247,8 +247,8 @@ do
 			end
 		end
 		
-		self:SetWidth();
 		self:SetDisplayRows(self.displayRows, self.rowHeight);
+		self:SetWidth();
 	end
 	
 	--- API for a ScrollingTable table
