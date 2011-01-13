@@ -248,6 +248,7 @@ do
 		end
 		
 		self:SetWidth();
+		self:SetDisplayRows(self.displayRows, self.rowHeight);
 	end
 	
 	--- API for a ScrollingTable table
@@ -752,7 +753,6 @@ do
 	
 		st:SetFilter(Filter);
 		st:SetDisplayCols(st.cols);
-		st:SetDisplayRows(st.displayRows, st.rowHeight);
 		st:RegisterEvents(st.DefaultEvents);
 		
 		return st;
