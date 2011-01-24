@@ -1,4 +1,7 @@
-local MAJOR, MINOR = "ScrollingTable", tonumber("@project-revision@") or 10000;
+local MAJOR, MINOR = "ScrollingTable", tonumber("@project-revision@") or 40000;
+if MINOR < 40000 then
+	MINOR = MINOR + 10000;
+end
 local ScrollingTable, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not ScrollingTable then 
 	return; -- No Upgrade needed. 
