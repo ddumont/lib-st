@@ -6,7 +6,7 @@ local ScrollingTable, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not ScrollingTable then 
 	return; -- No Upgrade needed. 
 end 
-
+ 
 do 
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
 	local defaulthighlight = { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 };
