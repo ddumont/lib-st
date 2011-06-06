@@ -588,6 +588,14 @@ do
 		end
 	end
 	
+	--- API for a ScrollingTable table
+	-- @name IsRowVisible
+	-- @description Checks if a row is currently being shown
+	-- @usage st:IsRowVisible(realrow)
+	-- @thanks sapu94
+	local function IsRowVisible(self, realrow)
+		return (realrow > self.offset and realrow <= (self.displayRows + self.offset))
+	end
 	
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
@@ -621,6 +629,7 @@ do
 		st.GetCell = GetCell;
 		st.GetRow = GetRow;
 		st.DoCellUpdate = DoCellUpdate;
+		st.RowIsVisible = IsRowVisible;
 		
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
