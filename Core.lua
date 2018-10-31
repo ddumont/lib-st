@@ -589,9 +589,16 @@ do
 	-- @name IsRowVisible
 	-- @description Checks if a row is currently being shown
 	-- @usage st:IsRowVisible(realrow)
-	-- @thanks sapu94
 	local function IsRowVisible(self, realrow)
-		return (realrow > self.offset and realrow <= (self.displayRows + self.offset))
+		-- Scan through all on-screen rows, checking their real data row numbers for a match.
+		local firstVisibleIdx = 1 + (self.offset or 0);
+		local lastVisibleIdx = (firstVisibleIdx + self.displayRows) - 1;
+		for i=firstVisibleIdx,lastVisibleIdx do
+			if self.filtered[i] == realrow and realrow ~= nil then
+				return true;
+			end
+		end
+		return false;
 	end
 
 	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
@@ -626,7 +633,8 @@ do
 		st.GetCell = GetCell;
 		st.GetRow = GetRow;
 		st.DoCellUpdate = DoCellUpdate;
-		st.RowIsVisible = IsRowVisible;
+		st.IsRowVisible = IsRowVisible;
+		st.RowIsVisible = IsRowVisible; -- Old name for backwards compatibility.
 
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
