@@ -381,7 +381,7 @@ do
 			end
 		else
 			local direction = column.sort or column.defaultsort or "asc";
-			if direction:lower() == "asc" then
+			if direction == "asc" then
 				return a1 > b1;
 			else
 				return a1 < b1;
@@ -680,7 +680,7 @@ do
 						local sortorder = "asc";
 						if not cols[column].sort and cols[column].defaultsort then
 							sortorder = cols[column].defaultsort; -- sort by columns default sort first;
-						elseif cols[column].sort and cols[column].sort:lower() == "asc" then
+						elseif cols[column].sort and cols[column].sort == "asc" then
 							sortorder = "dsc";
 						end
 						cols[column].sort = sortorder;
