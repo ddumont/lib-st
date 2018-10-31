@@ -1,8 +1,8 @@
-## Interface: 70000
+## Interface: 80000
 ## Title: lib-st |cff7f7fff -Ace3-|r
 ## Notes: Does stuff for sachmo
-## Author: @project-author@ (Sachmo - Arthas {TG}) 
-## Version: @project-version@ 
+## Author: @project-author@ (Sachmo - Arthas {TG})
+## Version: @project-version@
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3
 ## X-Category: Interface Enhancements
