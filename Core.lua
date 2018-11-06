@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "ScrollingTable", tonumber("10150.@project-timestamp@"); -- r150 bump when tagging new release (not alphas).
+local MAJOR, MINOR = "ScrollingTable", tonumber("@project-timestamp@");
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not lib then
 	return; -- Already loaded and no upgrade necessary.
