@@ -1,16 +1,19 @@
 local MAJOR, MINOR = "ScrollingTable", tonumber("10150.@project-timestamp@"); -- r150 bump when tagging new release (not alphas).
-local ScrollingTable, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
-if not ScrollingTable then
-	return; -- No Upgrade needed.
+local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
+if not lib then
+	return; -- Already loaded and no upgrade necessary.
 end
 
 do
+	lib.SORT_ASC = 1;
+	lib.SORT_DSC = 2;
+
 	local defaultcolor = { ["r"] = 1.0, ["g"] = 1.0, ["b"] = 1.0, ["a"] = 1.0 };
 	local defaulthighlight = { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 };
 	local defaulthighlightblank = { ["r"] = 0.0, ["g"] = 0.0, ["b"] = 0.0, ["a"] = 0.0 };
 	local lrpadding = 2.5;
 
-	local ScrollPaneBackdrop  = {
+	local ScrollPaneBackdrop = {
 		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
 		tile = true, tileSize = 16, edgeSize = 16,
@@ -196,7 +199,21 @@ do
 			self.head = row;
 		end
 		for i = 1, #cols do
-			local colFrameName =  row:GetName().."Col"..i;
+			-- Backwards compat: Check all provided columns for sort-related strings and convert them to numbers.
+			-- The past string-system used incorrect names for the directions. This conversion preserves that behavior.
+			if type(cols[i].defaultsort) == "string" then
+				if cols[i].defaultsort:lower() == "asc" then cols[i].defaultsort = lib.SORT_DSC;
+				elseif cols[i].defaultsort:lower() == "dsc" then cols[i].defaultsort = lib.SORT_ASC;
+				else cols[i].defaultsort = nil; end
+			end
+			if type(cols[i].sort) == "string" then
+				if cols[i].sort:lower() == "asc" then cols[i].sort = lib.SORT_DSC;
+				elseif cols[i].sort:lower() == "dsc" then cols[i].sort = lib.SORT_ASC;
+				else cols[i].sort = nil; end
+			end
+
+			-- Now proceed to set up the columns.
+			local colFrameName = row:GetName().."Col"..i;
 			local col = getglobal(colFrameName);
 			if not col then
 				col = CreateFrame("Button", colFrameName, row);
@@ -380,11 +397,11 @@ do
 				return false;
 			end
 		else
-			local direction = column.sort or column.defaultsort or "asc";
-			if direction:lower() == "asc" then
-				return a1 > b1;
-			else
+			local direction = column.sort or column.defaultsort or lib.SORT_DSC;
+			if direction == lib.SORT_ASC then
 				return a1 < b1;
+			else
+				return a1 > b1;
 			end
 		end
 	end
@@ -589,12 +606,19 @@ do
 	-- @name IsRowVisible
 	-- @description Checks if a row is currently being shown
 	-- @usage st:IsRowVisible(realrow)
-	-- @thanks sapu94
 	local function IsRowVisible(self, realrow)
-		return (realrow > self.offset and realrow <= (self.displayRows + self.offset))
+		-- Scan through all on-screen rows, checking their real data row numbers for a match.
+		local firstVisibleIdx = 1 + (self.offset or 0);
+		local lastVisibleIdx = (firstVisibleIdx + self.displayRows) - 1;
+		for i=firstVisibleIdx,lastVisibleIdx do
+			if self.filtered[i] == realrow and realrow ~= nil then
+				return true;
+			end
+		end
+		return false;
 	end
 
-	function ScrollingTable:CreateST(cols, numRows, rowHeight, highlight, parent)
+	function lib:CreateST(cols, numRows, rowHeight, highlight, parent)
 		local st = {};
 		self.framecount = self.framecount or 1;
 		local f = CreateFrame("Frame", "ScrollTable" .. self.framecount, parent or UIParent);
@@ -626,7 +650,8 @@ do
 		st.GetCell = GetCell;
 		st.GetRow = GetRow;
 		st.DoCellUpdate = DoCellUpdate;
-		st.RowIsVisible = IsRowVisible;
+		st.IsRowVisible = IsRowVisible;
+		st.RowIsVisible = IsRowVisible; -- Old name for backwards compatibility.
 
 		st.SetFilter = SetFilter;
 		st.DoFilter = DoFilter;
@@ -669,11 +694,11 @@ do
 								cols[i].sort = nil;
 							end
 						end
-						local sortorder = "asc";
+						local sortorder = lib.SORT_DSC;
 						if not cols[column].sort and cols[column].defaultsort then
 							sortorder = cols[column].defaultsort; -- sort by columns default sort first;
-						elseif cols[column].sort and cols[column].sort:lower() == "asc" then
-							sortorder = "dsc";
+						elseif cols[column].sort and cols[column].sort == lib.SORT_DSC then
+							sortorder = lib.SORT_ASC;
 						end
 						cols[column].sort = sortorder;
 						table:SortData();
