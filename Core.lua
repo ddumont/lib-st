@@ -1,4 +1,4 @@
-local MAJOR, MINOR = "ScrollingTable", tonumber("@project-timestamp@");
+local MAJOR, MINOR = "ScrollingTable", tonumber("@project-timestamp@") or 40300;
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not lib then
 	return; -- Already loaded and no upgrade necessary.
