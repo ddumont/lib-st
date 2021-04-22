@@ -742,7 +742,13 @@ do
 						table:SortData();
 
 					else
-						if table:GetSelection() == realrow then
+						local selected
+						if table.multiselection then
+							selected = (table.selected and table.selected:IsSelected(realrow))
+						else
+							selected = (table:GetSelection() == realrow)
+						end
+						if selected then
 							table:ClearSelection();
 						else
 							table:SetSelection(realrow);
