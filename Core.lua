@@ -518,7 +518,11 @@ do
 	-- @description Gets the currently selected to row.  Return will be the unaltered index of the data row that is selected.
 	-- @usage st:GetSelection()
 	local function GetSelection(self)
-		return self.selected;
+		if self.multiselection then
+			return self.selected:Get()
+		else
+			return self.selected;
+		end
 	end
 
 	--- API for a ScrollingTable table
@@ -749,7 +753,7 @@ do
 							selected = (table:GetSelection() == realrow)
 						end
 						if selected then
-							table:ClearSelection();
+							table:ClearSelection(realrow);
 						else
 							table:SetSelection(realrow);
 						end
