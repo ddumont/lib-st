@@ -13,7 +13,7 @@
 -- You should have received a copy of the GNU General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-local MAJOR, MINOR = "ScrollingTable", tonumber("@project-timestamp@") or 40300;
+local MAJOR, MINOR = "ScrollingTable", tonumber("@project-timestamp@") or 41300;
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR);
 if not lib then
 	return; -- Already loaded and no upgrade necessary.
